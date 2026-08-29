@@ -1,79 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arpit Kumar Jaiswal | SYSTEM ONLINE</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>arpitkjaiswal — backend engineer</title>
+<meta name="description" content="Portfolio of Arpit Kumar Jaiswal — backend engineer in training, B.Tech IT @ MIT Manipal." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div class="scanlines"></div>
-    <div class="terminal">
-        <header>
-            <h1>> ARPIT_KUMAR_JAISWAL</h1>
-            <p id="typewriter" class="tagline"></p>
-            
-            <nav>
-                <a href="#about">[SYS.INFO]</a>
-                <a href="#projects">[PROJECTS]</a>
-                <a href="#research">[RESEARCH]</a>
-                <a href="#contact">[COMM-LINK]</a>
-            </nav>
-        </header>
 
-        <main>
-            <section id="about">
-                <h2>> /ABOUT</h2>
-                <div class="content-block">
-                    <p><span class="highlight">STATUS:</span> B.Tech Information Technology @ MIT Manipal (Class of 2028)</p>
-                    <p><span class="highlight">FOCUS:</span> Full-Stack Java Development, High-Scale Systems Design, AI Agent Architecture.</p>
-                    <p><span class="highlight">ACHIEVEMENTS:</span> 200+ DSA Problems resolved across platforms.</p>
-                </div>
-            </section>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="#/" class="brand"><span class="brand-dot" aria-hidden="true"></span>arpitkjaiswal</a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <nav class="primary-nav" id="primaryNav">
+      <a href="#/" class="nav-link" data-route="/"><span class="method get">GET</span>/home</a>
+      <a href="#/projects" class="nav-link" data-route="/projects"><span class="method get">GET</span>/projects</a>
+      <a href="#/research" class="nav-link" data-route="/research"><span class="method get">GET</span>/research</a>
+      <a href="#/comps-and-certs" class="nav-link" data-route="/comps-and-certs"><span class="method get">GET</span>/certs</a>
+      <a href="#/blog" class="nav-link" data-route="/blog"><span class="method get">GET</span>/blog</a>
+      <a href="#/contact" class="nav-link" data-route="/contact"><span class="method post">POST</span>/contact</a>
+    </nav>
+  </div>
+</header>
 
-            <section id="projects">
-                <h2>> DIR /PROJECTS</h2>
-                
-                <div class="card">
-                    <h3>[-] Enterprise-Scale Secure Digital Banking</h3>
-                    <p class="tech-stack">TECH: Java | JavaFX | MySQL | JDBC</p>
-                    <p>Designed a comprehensive, multi-module transaction processing and digital banking system featuring a secure GUI and robust database integration.</p>
-                </div>
+<main id="app">
 
-                <div class="card">
-                    <h3>[-] Hotel Management System</h3>
-                    <p class="tech-stack">TECH: JavaFX | Java Collections (ArrayList)</p>
-                    <p>Developed a desktop-based graphical interface for efficient room allocation and customer data management.</p>
-                </div>
-            </section>
-
-            <section id="research">
-                <h2>> DIR /RESEARCH</h2>
-                
-                <div class="card">
-                    <h3>[-] Evaluating Classical and Machine Learning Techniques for Anomaly Detection in Highly Imbalanced Data</h3>
-                    <p><span class="highlight">AUTHORS:</span> Durga Prasad, Yogesh, Rakshit, Arpit Kumar Jaiswal</p>
-                    <p><span class="highlight">DEPARTMENT:</span> Department of School of Computer Engineering</p>
-                    <p>Academic research focusing on data imbalance strategies and anomaly detection models.</p>
-                </div>
-            </section>
-
-            <section id="contact">
-                <h2>> ESTABLISH_CONNECTION</h2>
-                <div class="content-block">
-                    <ul>
-                        <li>GITHUB: <a href="https://github.com/arpitkjaiswal" target="_blank">github.com/arpitkjaiswal</a></li>
-                        <li>LINKEDIN: <a href="#">[INSERT_LINKEDIN_URL]</a></li>
-                        <li>EMAIL: <a href="#">[INSERT_EMAIL]</a></li>
-                    </ul>
-                </div>
-            </section>
-        </main>
-        
-        <footer>
-            <p>SYSTEM.HALT() // SECURE CONNECTION TERMINATED.</p>
-        </footer>
+  <!-- HOME -->
+  <section class="route" data-route="/" id="route-home">
+    <div class="container hero">
+      <div class="hero-copy">
+        <h1>Backend engineer<br><span class="accent">in training.</span></h1>
+        <p class="lede">B.Tech IT student at MIT Manipal, building distributed systems and AI-backed products while grinding competitive programming toward Codeforces Division&nbsp;1. Working a self-directed roadmap toward SDE roles at top-tier product companies by 2028.</p>
+        <div class="stack-block">
+          <span class="stack-label">X-Stack:</span>
+          <div class="chip-row">
+            <span class="chip">Python</span><span class="chip">FastAPI</span><span class="chip">PostgreSQL</span>
+            <span class="chip">Redis</span><span class="chip">MongoDB</span><span class="chip">Docker</span>
+            <span class="chip">JWT Auth</span><span class="chip">React</span><span class="chip">Node.js / Express</span>
+            <span class="chip">PyTorch</span><span class="chip">NumPy / Pandas</span><span class="chip">Tailwind CSS</span>
+          </div>
+        </div>
+        <div class="cta-row">
+          <a href="#/projects" class="btn btn-primary">GET /projects</a>
+          <a href="#/contact" class="btn btn-ghost">POST /contact</a>
+        </div>
+      </div>
+      <div class="json-card">
+        <div class="json-card-head">
+          <span class="json-dot r"></span><span class="json-dot y"></span><span class="json-dot g"></span>
+          <span style="margin-left:6px;">whoami.json</span>
+        </div>
+        <div class="json-body" id="typewriter"></div>
+      </div>
     </div>
-    <script src="script.js"></script>
+  </section>
+
+  <!-- PROJECTS -->
+  <section class="route" data-route="/projects" id="route-projects">
+    <div class="container section-pad">
+      <span class="eyebrow">GET /projects</span>
+      <h2 class="section-title">Projects</h2>
+      <p class="section-sub">Six builds worth a closer look — placement work, AI products, and one for-fun systems piece.</p>
+      <div class="grid-cards">
+
+        <div class="card placeholder">
+          <div class="card-top">
+            <span class="card-path">/projects/terramind</span>
+            <span class="status-badge status-build">202 · FLAGSHIP</span>
+          </div>
+          <h3>TerraMind</h3>
+          <p>Flagship placement project — add 2–3 lines here on what it does, the stack, and the outcome. Edit this card directly in the file.</p>
+          <div class="card-tags"><span class="tag">edit me</span></div>
+          <a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener" class="card-link">GitHub ↗</a>
+        </div>
+
+        <div class="card">
+          <div class="card-top">
+            <span class="card-path">/projects/redrob</span>
+            <span class="status-badge status-ok">200 OK</span>
+          </div>
+          <h3>RedRob</h3>
+          <p>AI-powered candidate ranking engine, built for a Data & AI Challenge. Scores and ranks applicants against role criteria; shipped with a full deck covering the scoring methodology.</p>
+          <div class="card-tags"><span class="tag">AI/ML</span><span class="tag">Ranking</span><span class="tag">Data Pipeline</span></div>
+          <a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener" class="card-link">GitHub ↗</a>
+        </div>
+
+        <div class="card">
+          <div class="card-top">
+            <span class="card-path">/projects/ardra-ai</span>
+            <span class="status-badge status-ok">200 OK</span>
+          </div>
+          <h3>ARDRA.ai</h3>
+          <p>AI SaaS marketing site with a Claude API–powered chatbot built directly into the product experience.</p>
+          <div class="card-tags"><span class="tag">SaaS</span><span class="tag">Claude API</span><span class="tag">Marketing</span></div>
+          <a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener" class="card-link">GitHub ↗</a>
+        </div>
+
+        <div class="card">
+          <div class="card-top">
+            <span class="card-path">/projects/support-saas</span>
+            <span class="status-badge status-ok">200 OK</span>
+          </div>
+          <h3>Support SaaS</h3>
+          <p>Multi-tenant, AI-powered customer support platform in the Intercom/Zendesk mold — built on a pgvector/RAG architecture for context-aware responses.</p>
+          <div class="card-tags"><span class="tag">RAG</span><span class="tag">pgvector</span><span class="tag">Multi-tenant</span></div>
+          <a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener" class="card-link">GitHub ↗</a>
+        </div>
+
+        <div class="card">
+          <div class="card-top">
+            <span class="card-path">/projects/url-shortener</span>
+            <span class="status-badge status-ok">200 OK</span>
+          </div>
+          <h3>URL Shortener</h3>
+          <p>Full-stack MERN link shortener — custom short codes, auth, QR generation, click/location/device analytics, link expiry, password-protected links, and rate limiting.</p>
+          <div class="card-tags"><span class="tag">React</span><span class="tag">Node.js</span><span class="tag">MongoDB</span></div>
+          <a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener" class="card-link">GitHub ↗</a>
+        </div>
+
+        <div class="card">
+          <div class="card-top">
+            <span class="card-path">/projects/weblinux-os</span>
+            <span class="status-badge status-ok">200 OK</span>
+          </div>
+          <h3>WebLinux OS</h3>
+          <p>A browser-based desktop environment — 50+ mini-apps and a working window manager, all inside a single self-contained HTML file.</p>
+          <div class="card-tags"><span class="tag">Vanilla JS</span><span class="tag">Systems</span></div>
+          <a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener" class="card-link">GitHub ↗</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- RESEARCH -->
+  <section class="route" data-route="/research" id="route-research">
+    <div class="container section-pad">
+      <span class="eyebrow">GET /research</span>
+      <h2 class="section-title">Research & Deep Dives</h2>
+      <p class="section-sub">Hackathon architectures and the competitive-programming grind.</p>
+      <div class="research-list">
+
+        <div class="research-item">
+          <span class="research-tag">HACKATHON</span>
+          <div>
+            <h3>Smriti — memory-augmented DSA coach</h3>
+            <p>Built at the WeMakeDevs × Cognee hackathon. Uses Cognee's full memory lifecycle — remember, recall, memify, forget — on top of a Codeforces ingestion backend, served through FastAPI.</p>
+            <p class="credit">with Straw Hats — Shashank Gupta, Shlok Verma, Siddharth B.</p>
+          </div>
+        </div>
+
+        <div class="research-item">
+          <span class="research-tag">HACKATHON</span>
+          <div>
+            <h3>Flipkart Grid 2.0 — "V8 Architecture"</h3>
+            <p>Custom PyTorch pipeline for Bengaluru traffic demand prediction: neural entity embeddings, residual MLPs, AdamW optimizer with Huber loss, validated with 10-fold stratified cross-validation.</p>
+            <p class="credit">with Straw Hats — Shashank Gupta, Shlok Verma, Siddharth B.</p>
+          </div>
+        </div>
+
+        <div class="research-item">
+          <span class="research-tag">CP / DSA</span>
+          <div>
+            <h3>Competitive programming</h3>
+            <p>Working toward Codeforces Division 1. Built out comprehensive Java DSA notes and pattern libraries as part of the climb.</p>
+          </div>
+        </div>
+
+        <div class="research-item">
+          <span class="research-tag">UP NEXT</span>
+          <div>
+            <h3>16-month SDE roadmap</h3>
+            <p>Anchor builds for the roadmap ahead: a Distributed KV Store and a Real-Time Chat System.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPS & CERTS -->
+  <section class="route" data-route="/comps-and-certs" id="route-certs">
+    <div class="container section-pad">
+      <span class="eyebrow">GET /comps-and-certs</span>
+      <h2 class="section-title">Comps & Certs</h2>
+      <p class="section-sub">Competitions and credentials.</p>
+      <div class="empty-state">
+        <h3>No credentials logged yet</h3>
+        <p>Add certifications, course completions, or competition placements here as you earn them — this card is ready and waiting.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BLOG / DEVLOGS -->
+  <section class="route" data-route="/blog" id="route-blog">
+    <div class="container section-pad">
+      <span class="eyebrow">GET /blog</span>
+      <h2 class="section-title">DevLogs</h2>
+      <p class="section-sub">Recent build notes, in order.</p>
+      <div class="log-list">
+        <div class="log-item">
+          <span class="log-status fixed">500 → 200</span>
+          <p>Fixed a Render deployment error on the Smriti hackathon submission — traced to a Cognee dependency version clash plus a Python version mismatch.</p>
+        </div>
+        <div class="log-item">
+          <span class="log-status shipping">SHIPPING</span>
+          <p>WebLinux OS — a full browser desktop crammed into one HTML file, 50+ apps and counting.</p>
+        </div>
+        <div class="log-item">
+          <span class="log-status progress">IN PROGRESS</span>
+          <p>Polishing the GitHub profile README for placement season — flat badges, typing animation, expanded stack section.</p>
+        </div>
+        <div class="log-item">
+          <span class="log-status progress">IN PROGRESS</span>
+          <p>Drafting a placement resume with a photo-header layout.</p>
+        </div>
+        <div class="log-item">
+          <span class="log-status planned">PLANNED</span>
+          <p>Locked in a 16-month SDE roadmap — Distributed KV Store and a Real-Time Chat System as the anchor builds.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="route" data-route="/contact" id="route-contact">
+    <div class="container section-pad">
+      <span class="eyebrow post">POST /contact</span>
+      <h2 class="section-title">Open a connection</h2>
+      <div class="contact-wrap">
+        <div class="contact-copy">
+          <p>Recruiting for an SDE role, want to talk about a project, or just want to say hi — any of these work.</p>
+        </div>
+        <div class="payload-card">
+          <div class="field-row"><span class="field-key">"email"</span><a class="field-val" href="mailto:arpit.kr.jaiswal@gmail.com">arpit.kr.jaiswal@gmail.com</a></div>
+          <div class="field-row"><span class="field-key">"github"</span><a class="field-val" href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener">github.com/arpitkjaiswal</a></div>
+          <div class="field-row"><span class="field-key">"linkedin"</span><a class="field-val" href="https://linkedin.com/in/arpit-kumar-j-819478302/" target="_blank" rel="noopener">linkedin.com/in/arpit-kumar-j</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="container footer-inner">
+    <span>arpitkjaiswal — built with HTML / CSS / JS, single file</span>
+    <span id="year"></span>
+  </div>
+</footer>
+
+<script src="script.js" defer></script>
+
 </body>
 </html>
