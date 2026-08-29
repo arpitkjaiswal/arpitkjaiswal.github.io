@@ -1,0 +1,148 @@
+:root {
+    --bg-color: #0a0a0c;
+    --text-primary: #00ff41;
+    --text-secondary: #008f11;
+    --glow: 0 0 10px #00ff41, 0 0 20px #00ff41;
+    --font-stack: 'Courier New', Courier, monospace;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-family: var(--font-stack);
+    line-height: 1.6;
+    overflow-x: hidden;
+    padding: 2rem;
+}
+
+/* CRT Scanline Effect */
+.scanlines {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 4px, 3px 100%;
+    z-index: 100;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.terminal {
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 10;
+}
+
+h1, h2, h3 {
+    text-shadow: 0 0 5px var(--text-primary);
+    margin-bottom: 1rem;
+    font-weight: normal;
+}
+
+h1 {
+    font-size: 2.5rem;
+    border-bottom: 2px solid var(--text-secondary);
+    display: inline-block;
+    padding-bottom: 0.5rem;
+}
+
+h2 {
+    margin-top: 3rem;
+    color: var(--text-secondary);
+}
+
+.tagline {
+    font-size: 1.2rem;
+    margin: 1rem 0 2rem 0;
+    height: 1.5rem; 
+}
+
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+    border: 1px solid var(--text-secondary);
+    padding: 1rem;
+    background: rgba(0, 255, 65, 0.05);
+}
+
+a {
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+a:hover {
+    text-shadow: var(--glow);
+    background-color: rgba(0, 255, 65, 0.2);
+}
+
+.content-block, .card {
+    border-left: 2px solid var(--text-secondary);
+    padding-left: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.card {
+    border: 1px solid var(--text-secondary);
+    padding: 1.5rem;
+    background: rgba(0, 255, 65, 0.02);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateX(10px);
+    box-shadow: -5px 0 15px rgba(0, 255, 65, 0.3);
+    border-color: var(--text-primary);
+}
+
+.tech-stack {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.highlight {
+    color: #ffffff;
+    text-shadow: 0 0 5px #ffffff;
+}
+
+ul {
+    list-style-type: none;
+}
+
+ul li {
+    margin-bottom: 0.5rem;
+}
+
+footer {
+    margin-top: 5rem;
+    text-align: center;
+    color: var(--text-secondary);
+    border-top: 1px dashed var(--text-secondary);
+    padding-top: 2rem;
+}
+
+/* Blinking Cursor for Typewriter */
+#typewriter::after {
+    content: '█';
+    animation: blink 1s step-end infinite;
+    margin-left: 5px;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+@media (max-width: 600px) {
+    h1 { font-size: 1.8rem; }
+    nav { flex-direction: column; gap: 0.5rem; }
+}
