@@ -1,79 +1,103 @@
 // ---- routing ----
-  const routes = document.querySelectorAll('.route');
-  const navLinks = document.querySelectorAll('.nav-link');
+const routes = document.querySelectorAll('.route');
+const navLinks = document.querySelectorAll('.nav-link');
 
-  function showRoute(hash){
-    const path = (hash || '#/').replace('#','') || '/';
-    routes.forEach(r => r.classList.toggle('is-active', r.dataset.route === path));
-    navLinks.forEach(l => l.classList.toggle('active', l.dataset.route === path));
-    if (!document.querySelector('.route[data-route="'+path+'"]')){
-      routes.forEach(r => r.classList.toggle('is-active', r.dataset.route === '/'));
-      navLinks.forEach(l => l.classList.toggle('active', l.dataset.route === '/'));
+function showRoute(hash){
+  const path = (hash || '#/').replace('#','') || '/';
+  const exists = document.querySelector('.route[data-route="'+path+'"]');
+  const target = exists ? path : '/';
+  routes.forEach(r => r.classList.toggle('is-active', r.dataset.route === target));
+  navLinks.forEach(l => l.classList.toggle('active', l.dataset.route === target));
+}
+window.addEventListener('hashchange', () => showRoute(location.hash));
+showRoute(location.hash);
+
+// ---- mobile menu ----
+const navToggle = document.getElementById('navToggle');
+const primaryNav = document.getElementById('primaryNav');
+navToggle.addEventListener('click', () => {
+  const isOpen = primaryNav.classList.toggle('open');
+  navToggle.setAttribute('aria-expanded', isOpen);
+  navToggle.textContent = isOpen ? '[ CLOSE ]' : '[ NAV ]';
+});
+navLinks.forEach(l => l.addEventListener('click', () => {
+  primaryNav.classList.remove('open');
+  navToggle.setAttribute('aria-expanded', 'false');
+  navToggle.textContent = '[ NAV ]';
+}));
+
+// ---- footer year ----
+document.getElementById('year').textContent = new Date().getFullYear();
+
+// ---- audio toggle (self-contained low hum via WebAudio, no external file) ----
+const audioBtn = document.getElementById('audioToggle');
+let audioCtx = null, oscillator = null, gainNode = null, audioOn = false;
+
+audioBtn.addEventListener('click', () => {
+  if (!audioOn){
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    oscillator = audioCtx.createOscillator();
+    gainNode = audioCtx.createGain();
+    oscillator.type = 'sine';
+    oscillator.frequency.value = 55;
+    gainNode.gain.value = 0.0001;
+    oscillator.connect(gainNode).connect(audioCtx.destination);
+    oscillator.start();
+    gainNode.gain.linearRampToValueAtTime(0.025, audioCtx.currentTime + 0.4);
+    audioOn = true;
+  } else {
+    if (gainNode) gainNode.gain.linearRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
+    if (oscillator) { const osc = oscillator; setTimeout(() => osc.stop(), 350); }
+    audioOn = false;
+  }
+  audioBtn.textContent = 'AUDIO: ' + (audioOn ? 'ON' : 'OFF');
+});
+
+// ---- boot-sequence typing in hero terminal ----
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const bootLines = [
+  ['whoami', 'ARPIT KUMAR JAISWAL'],
+  ['role', 'BACKEND ENGINEER — IN TRAINING'],
+  ['base', 'MANIPAL, INDIA'],
+  ['edu', 'B.TECH IT, MIT MANIPAL — 2028'],
+  ['focus', 'DISTRIBUTED SYSTEMS · COMPETITIVE PROGRAMMING · AI PRODUCTS'],
+  ['status', 'SHIPPING TOWARD SDE ROLES — TARGET 2028']
+];
+
+const term = document.getElementById('bootLines');
+
+function buildLine(cmd, out){
+  const wrap = document.createElement('div');
+  wrap.className = 'term-line';
+  const promptEl = document.createElement('div');
+  promptEl.innerHTML = '<span class="term-prompt">guest@arpitkjaiswal:~$</span> ' + cmd;
+  const outEl = document.createElement('div');
+  outEl.className = 'term-out';
+  outEl.textContent = out;
+  wrap.appendChild(promptEl);
+  wrap.appendChild(outEl);
+  return wrap;
+}
+
+function bootInstant(){
+  bootLines.forEach(([c, o]) => term.appendChild(buildLine(c, o)));
+}
+
+function bootType(){
+  let i = 0;
+  function next(){
+    if (i >= bootLines.length){
+      const cur = document.createElement('span');
+      cur.className = 'cursor-blink';
+      term.appendChild(cur);
+      return;
     }
+    const [c, o] = bootLines[i];
+    term.appendChild(buildLine(c, o));
+    i++;
+    setTimeout(next, 220);
   }
-  window.addEventListener('hashchange', () => showRoute(location.hash));
-  showRoute(location.hash);
+  next();
+}
 
-  // ---- mobile menu ----
-  const menuToggle = document.getElementById('menuToggle');
-  const primaryNav = document.getElementById('primaryNav');
-  menuToggle.addEventListener('click', () => {
-    const isOpen = primaryNav.classList.toggle('open');
-    menuToggle.setAttribute('aria-expanded', isOpen);
-  });
-  navLinks.forEach(l => l.addEventListener('click', () => {
-    primaryNav.classList.remove('open');
-    menuToggle.setAttribute('aria-expanded', 'false');
-  }));
-
-  // ---- footer year ----
-  document.getElementById('year').textContent = new Date().getFullYear();
-
-  // ---- typewriter hero JSON ----
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const jsonLines = [
-    ['{', ''],
-    ['  "name"', '"Arpit Kumar Jaiswal",'],
-    ['  "role"', '"Backend Engineer — in training",'],
-    ['  "based_in"', '"Manipal, India",'],
-    ['  "education"', '"B.Tech IT, MIT Manipal, 2028",'],
-    ['  "focus"', '["distributed systems", "competitive programming", "AI products"],'],
-    ['  "status"', '"shipping toward SDE roles, target 2028"'],
-    ['}', '']
-  ];
-
-  function renderLine(keyPart, valPart){
-    const span = document.createElement('div');
-    if (!valPart && keyPart === '{' || keyPart === '}'){
-      span.innerHTML = '<span class="json-punct">'+keyPart+'</span>';
-    } else {
-      span.innerHTML = '<span class="json-key">'+keyPart+'</span><span class="json-punct">: </span><span class="json-str">'+valPart+'</span>';
-    }
-    return span;
-  }
-
-  const target = document.getElementById('typewriter');
-
-  function typewrite(){
-    let li = 0;
-    function nextLine(){
-      if (li >= jsonLines.length){
-        const cursor = document.createElement('span');
-        cursor.className = 'cursor-blink';
-        target.appendChild(cursor);
-        return;
-      }
-      const [k, v] = jsonLines[li];
-      const lineEl = renderLine(k, v);
-      target.appendChild(lineEl);
-      li++;
-      setTimeout(nextLine, 90);
-    }
-    nextLine();
-  }
-
-  function renderInstant(){
-    jsonLines.forEach(([k, v]) => target.appendChild(renderLine(k, v)));
-  }
-
-  if (reduceMotion){ renderInstant(); } else { typewrite(); }
+if (reduceMotion){ bootInstant(); } else { bootType(); }
