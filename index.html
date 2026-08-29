@@ -3,28 +3,35 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>arpitkjaiswal — backend engineer</title>
+<title>arpitkjaiswal — terminal</title>
 <meta name="description" content="Portfolio of Arpit Kumar Jaiswal — backend engineer in training, B.Tech IT @ MIT Manipal." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
+<div class="crt-overlay" aria-hidden="true"></div>
+<div class="crt-vignette" aria-hidden="true"></div>
+
 <header class="topbar">
   <div class="topbar-inner">
-    <a href="#/" class="brand"><span class="brand-dot" aria-hidden="true"></span>arpitkjaiswal</a>
-    <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
-    </button>
+    <a href="#/" class="brand-block">
+      <span class="brand-name">ARPITKJ</span>
+      <span class="brand-sub">SYSTEM // OPERATOR:ARPITKJ</span>
+    </a>
+    <div class="topbar-controls">
+      <button class="audio-btn" id="audioToggle" type="button">AUDIO: OFF</button>
+      <button class="nav-toggle-btn" id="navToggle" type="button" aria-expanded="false">[ NAV ]</button>
+    </div>
     <nav class="primary-nav" id="primaryNav">
-      <a href="#/" class="nav-link" data-route="/"><span class="method get">GET</span>/home</a>
-      <a href="#/projects" class="nav-link" data-route="/projects"><span class="method get">GET</span>/projects</a>
-      <a href="#/research" class="nav-link" data-route="/research"><span class="method get">GET</span>/research</a>
-      <a href="#/comps-and-certs" class="nav-link" data-route="/comps-and-certs"><span class="method get">GET</span>/certs</a>
-      <a href="#/blog" class="nav-link" data-route="/blog"><span class="method get">GET</span>/blog</a>
-      <a href="#/contact" class="nav-link" data-route="/contact"><span class="method post">POST</span>/contact</a>
+      <a href="#/" class="nav-link" data-route="/">[ HOME ]</a>
+      <a href="#/projects" class="nav-link" data-route="/projects">[ PROJECTS ]</a>
+      <a href="#/research" class="nav-link" data-route="/research">[ RESEARCH ]</a>
+      <a href="#/comps-and-certs" class="nav-link" data-route="/comps-and-certs">[ COMPS &amp; CERTS ]</a>
+      <a href="#/devlogs" class="nav-link" data-route="/devlogs">[ DEVLOGS ]</a>
+      <a href="#/comm-link" class="nav-link" data-route="/comm-link">[ COMM-LINK ]</a>
     </nav>
   </div>
 </header>
@@ -34,29 +41,29 @@
   <!-- HOME -->
   <section class="route" data-route="/" id="route-home">
     <div class="container hero">
-      <div class="hero-copy">
-        <h1>Backend engineer<br><span class="accent">in training.</span></h1>
-        <p class="lede">B.Tech IT student at MIT Manipal, building distributed systems and AI-backed products while grinding competitive programming toward Codeforces Division&nbsp;1. Working a self-directed roadmap toward SDE roles at top-tier product companies by 2028.</p>
-        <div class="stack-block">
-          <span class="stack-label">X-Stack:</span>
-          <div class="chip-row">
-            <span class="chip">Python</span><span class="chip">FastAPI</span><span class="chip">PostgreSQL</span>
-            <span class="chip">Redis</span><span class="chip">MongoDB</span><span class="chip">Docker</span>
-            <span class="chip">JWT Auth</span><span class="chip">React</span><span class="chip">Node.js / Express</span>
-            <span class="chip">PyTorch</span><span class="chip">NumPy / Pandas</span><span class="chip">Tailwind CSS</span>
-          </div>
-        </div>
-        <div class="cta-row">
-          <a href="#/projects" class="btn btn-primary">GET /projects</a>
-          <a href="#/contact" class="btn btn-ghost">POST /contact</a>
+      <div class="hero-intro">
+        <h1>&gt; BACKEND ENGINEER<br>&gt; IN TRAINING_</h1>
+        <p>B.Tech IT student at MIT Manipal, building distributed systems and AI-backed products while grinding competitive programming toward Codeforces Division 1. Running a self-directed roadmap toward SDE roles at top-tier product companies by 2028.</p>
+      </div>
+
+      <div class="terminal-window">
+        <div class="terminal-titlebar"><span class="term-dot"></span> session — /dev/tty0</div>
+        <div class="terminal-body" id="bootLines"></div>
+      </div>
+
+      <div class="stack-block">
+        <span class="stack-label">// STACK</span>
+        <div class="chip-row">
+          <span class="chip">PYTHON</span><span class="chip">FASTAPI</span><span class="chip">POSTGRESQL</span>
+          <span class="chip">REDIS</span><span class="chip">MONGODB</span><span class="chip">DOCKER</span>
+          <span class="chip">JWT AUTH</span><span class="chip">REACT</span><span class="chip">NODE.JS / EXPRESS</span>
+          <span class="chip">PYTORCH</span><span class="chip">NUMPY / PANDAS</span><span class="chip">TAILWIND CSS</span>
         </div>
       </div>
-      <div class="json-card">
-        <div class="json-card-head">
-          <span class="json-dot r"></span><span class="json-dot y"></span><span class="json-dot g"></span>
-          <span style="margin-left:6px;">whoami.json</span>
-        </div>
-        <div class="json-body" id="typewriter"></div>
+
+      <div class="cta-row">
+        <a href="#/projects" class="btn">&gt; VIEW PROJECTS</a>
+        <a href="#/comm-link" class="btn amber">&gt; OPEN COMM-LINK</a>
       </div>
     </div>
   </section>
@@ -64,75 +71,75 @@
   <!-- PROJECTS -->
   <section class="route" data-route="/projects" id="route-projects">
     <div class="container section-pad">
-      <span class="eyebrow">GET /projects</span>
+      <span class="tag-label">/PROJECTS</span>
       <h2 class="section-title">Projects</h2>
       <p class="section-sub">Six builds worth a closer look — placement work, AI products, and one for-fun systems piece.</p>
       <div class="grid-cards">
 
-        <div class="card placeholder">
+        <div class="ascii-panel card placeholder">
           <div class="card-top">
-            <span class="card-path">/projects/terramind</span>
-            <span class="status-badge status-build">202 · FLAGSHIP</span>
+            <span class="card-idx">[ 01 ]</span>
+            <span class="status-badge status-build">FLAGSHIP · PENDING</span>
           </div>
           <h3>TerraMind</h3>
-          <p>Flagship placement project — add 2–3 lines here on what it does, the stack, and the outcome. Edit this card directly in the file.</p>
-          <div class="card-tags"><span class="tag">edit me</span></div>
-          <a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener" class="card-link">GitHub ↗</a>
+          <p>Flagship placement project — add 2–3 lines here on what it does, the stack, and the outcome. Edit this block directly in the file.</p>
+          <div class="card-tags"><span class="tag">EDIT ME</span></div>
+          <a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener" class="card-link">&gt; VIEW ON GITHUB</a>
         </div>
 
-        <div class="card">
+        <div class="ascii-panel card">
           <div class="card-top">
-            <span class="card-path">/projects/redrob</span>
-            <span class="status-badge status-ok">200 OK</span>
+            <span class="card-idx">[ 02 ]</span>
+            <span class="status-badge status-ok">LIVE</span>
           </div>
           <h3>RedRob</h3>
-          <p>AI-powered candidate ranking engine, built for a Data & AI Challenge. Scores and ranks applicants against role criteria; shipped with a full deck covering the scoring methodology.</p>
-          <div class="card-tags"><span class="tag">AI/ML</span><span class="tag">Ranking</span><span class="tag">Data Pipeline</span></div>
-          <a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener" class="card-link">GitHub ↗</a>
+          <p>AI-powered candidate ranking engine, built for a Data &amp; AI Challenge. Scores and ranks applicants against role criteria; shipped with a full deck covering the scoring methodology.</p>
+          <div class="card-tags"><span class="tag">AI/ML</span><span class="tag">RANKING</span><span class="tag">DATA PIPELINE</span></div>
+          <a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener" class="card-link">&gt; VIEW ON GITHUB</a>
         </div>
 
-        <div class="card">
+        <div class="ascii-panel card">
           <div class="card-top">
-            <span class="card-path">/projects/ardra-ai</span>
-            <span class="status-badge status-ok">200 OK</span>
+            <span class="card-idx">[ 03 ]</span>
+            <span class="status-badge status-ok">LIVE</span>
           </div>
           <h3>ARDRA.ai</h3>
           <p>AI SaaS marketing site with a Claude API–powered chatbot built directly into the product experience.</p>
-          <div class="card-tags"><span class="tag">SaaS</span><span class="tag">Claude API</span><span class="tag">Marketing</span></div>
-          <a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener" class="card-link">GitHub ↗</a>
+          <div class="card-tags"><span class="tag">SAAS</span><span class="tag">CLAUDE API</span><span class="tag">MARKETING</span></div>
+          <a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener" class="card-link">&gt; VIEW ON GITHUB</a>
         </div>
 
-        <div class="card">
+        <div class="ascii-panel card">
           <div class="card-top">
-            <span class="card-path">/projects/support-saas</span>
-            <span class="status-badge status-ok">200 OK</span>
+            <span class="card-idx">[ 04 ]</span>
+            <span class="status-badge status-ok">LIVE</span>
           </div>
           <h3>Support SaaS</h3>
           <p>Multi-tenant, AI-powered customer support platform in the Intercom/Zendesk mold — built on a pgvector/RAG architecture for context-aware responses.</p>
-          <div class="card-tags"><span class="tag">RAG</span><span class="tag">pgvector</span><span class="tag">Multi-tenant</span></div>
-          <a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener" class="card-link">GitHub ↗</a>
+          <div class="card-tags"><span class="tag">RAG</span><span class="tag">PGVECTOR</span><span class="tag">MULTI-TENANT</span></div>
+          <a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener" class="card-link">&gt; VIEW ON GITHUB</a>
         </div>
 
-        <div class="card">
+        <div class="ascii-panel card">
           <div class="card-top">
-            <span class="card-path">/projects/url-shortener</span>
-            <span class="status-badge status-ok">200 OK</span>
+            <span class="card-idx">[ 05 ]</span>
+            <span class="status-badge status-ok">LIVE</span>
           </div>
           <h3>URL Shortener</h3>
           <p>Full-stack MERN link shortener — custom short codes, auth, QR generation, click/location/device analytics, link expiry, password-protected links, and rate limiting.</p>
-          <div class="card-tags"><span class="tag">React</span><span class="tag">Node.js</span><span class="tag">MongoDB</span></div>
-          <a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener" class="card-link">GitHub ↗</a>
+          <div class="card-tags"><span class="tag">REACT</span><span class="tag">NODE.JS</span><span class="tag">MONGODB</span></div>
+          <a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener" class="card-link">&gt; VIEW ON GITHUB</a>
         </div>
 
-        <div class="card">
+        <div class="ascii-panel card">
           <div class="card-top">
-            <span class="card-path">/projects/weblinux-os</span>
-            <span class="status-badge status-ok">200 OK</span>
+            <span class="card-idx">[ 06 ]</span>
+            <span class="status-badge status-ok">LIVE</span>
           </div>
           <h3>WebLinux OS</h3>
           <p>A browser-based desktop environment — 50+ mini-apps and a working window manager, all inside a single self-contained HTML file.</p>
-          <div class="card-tags"><span class="tag">Vanilla JS</span><span class="tag">Systems</span></div>
-          <a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener" class="card-link">GitHub ↗</a>
+          <div class="card-tags"><span class="tag">VANILLA JS</span><span class="tag">SYSTEMS</span></div>
+          <a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener" class="card-link">&gt; VIEW ON GITHUB</a>
         </div>
 
       </div>
@@ -142,39 +149,39 @@
   <!-- RESEARCH -->
   <section class="route" data-route="/research" id="route-research">
     <div class="container section-pad">
-      <span class="eyebrow">GET /research</span>
-      <h2 class="section-title">Research & Deep Dives</h2>
+      <span class="tag-label">/RESEARCH</span>
+      <h2 class="section-title">Research &amp; Deep Dives</h2>
       <p class="section-sub">Hackathon architectures and the competitive-programming grind.</p>
       <div class="research-list">
 
-        <div class="research-item">
-          <span class="research-tag">HACKATHON</span>
+        <div class="ascii-panel research-item">
+          <span class="research-tag">[ HACKATHON ]</span>
           <div>
             <h3>Smriti — memory-augmented DSA coach</h3>
             <p>Built at the WeMakeDevs × Cognee hackathon. Uses Cognee's full memory lifecycle — remember, recall, memify, forget — on top of a Codeforces ingestion backend, served through FastAPI.</p>
-            <p class="credit">with Straw Hats — Shashank Gupta, Shlok Verma, Siddharth B.</p>
+            <p class="credit">TEAM: STRAW HATS — SHASHANK GUPTA, SHLOK VERMA, SIDDHARTH B.</p>
           </div>
         </div>
 
-        <div class="research-item">
-          <span class="research-tag">HACKATHON</span>
+        <div class="ascii-panel research-item">
+          <span class="research-tag">[ HACKATHON ]</span>
           <div>
             <h3>Flipkart Grid 2.0 — "V8 Architecture"</h3>
             <p>Custom PyTorch pipeline for Bengaluru traffic demand prediction: neural entity embeddings, residual MLPs, AdamW optimizer with Huber loss, validated with 10-fold stratified cross-validation.</p>
-            <p class="credit">with Straw Hats — Shashank Gupta, Shlok Verma, Siddharth B.</p>
+            <p class="credit">TEAM: STRAW HATS — SHASHANK GUPTA, SHLOK VERMA, SIDDHARTH B.</p>
           </div>
         </div>
 
-        <div class="research-item">
-          <span class="research-tag">CP / DSA</span>
+        <div class="ascii-panel research-item">
+          <span class="research-tag">[ CP / DSA ]</span>
           <div>
             <h3>Competitive programming</h3>
             <p>Working toward Codeforces Division 1. Built out comprehensive Java DSA notes and pattern libraries as part of the climb.</p>
           </div>
         </div>
 
-        <div class="research-item">
-          <span class="research-tag">UP NEXT</span>
+        <div class="ascii-panel research-item">
+          <span class="research-tag">[ UP NEXT ]</span>
           <div>
             <h3>16-month SDE roadmap</h3>
             <p>Anchor builds for the roadmap ahead: a Distributed KV Store and a Real-Time Chat System.</p>
@@ -188,25 +195,25 @@
   <!-- COMPS & CERTS -->
   <section class="route" data-route="/comps-and-certs" id="route-certs">
     <div class="container section-pad">
-      <span class="eyebrow">GET /comps-and-certs</span>
-      <h2 class="section-title">Comps & Certs</h2>
+      <span class="tag-label">/COMPS &amp; CERTS</span>
+      <h2 class="section-title">Comps &amp; Certs</h2>
       <p class="section-sub">Competitions and credentials.</p>
-      <div class="empty-state">
-        <h3>No credentials logged yet</h3>
-        <p>Add certifications, course completions, or competition placements here as you earn them — this card is ready and waiting.</p>
+      <div class="ascii-panel empty-state">
+        <h3>&gt; ls ./certifications</h3>
+        <p>NO ENTRIES FOUND. Add certifications, course completions, or competition placements here as you earn them — this block is ready and waiting.</p>
       </div>
     </div>
   </section>
 
-  <!-- BLOG / DEVLOGS -->
-  <section class="route" data-route="/blog" id="route-blog">
+  <!-- DEVLOGS -->
+  <section class="route" data-route="/devlogs" id="route-devlogs">
     <div class="container section-pad">
-      <span class="eyebrow">GET /blog</span>
+      <span class="tag-label">/DEVLOGS</span>
       <h2 class="section-title">DevLogs</h2>
       <p class="section-sub">Recent build notes, in order.</p>
-      <div class="log-list">
+      <div class="ascii-panel log-list">
         <div class="log-item">
-          <span class="log-status fixed">500 → 200</span>
+          <span class="log-status fixed">FIXED</span>
           <p>Fixed a Render deployment error on the Smriti hackathon submission — traced to a Cognee dependency version clash plus a Python version mismatch.</p>
         </div>
         <div class="log-item">
@@ -229,19 +236,19 @@
     </div>
   </section>
 
-  <!-- CONTACT -->
-  <section class="route" data-route="/contact" id="route-contact">
+  <!-- COMM-LINK -->
+  <section class="route" data-route="/comm-link" id="route-comm-link">
     <div class="container section-pad">
-      <span class="eyebrow post">POST /contact</span>
-      <h2 class="section-title">Open a connection</h2>
+      <span class="tag-label">/COMM-LINK</span>
+      <h2 class="section-title">Open a Connection</h2>
       <div class="contact-wrap">
         <div class="contact-copy">
           <p>Recruiting for an SDE role, want to talk about a project, or just want to say hi — any of these work.</p>
         </div>
-        <div class="payload-card">
-          <div class="field-row"><span class="field-key">"email"</span><a class="field-val" href="mailto:arpit.kr.jaiswal@gmail.com">arpit.kr.jaiswal@gmail.com</a></div>
-          <div class="field-row"><span class="field-key">"github"</span><a class="field-val" href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener">github.com/arpitkjaiswal</a></div>
-          <div class="field-row"><span class="field-key">"linkedin"</span><a class="field-val" href="https://linkedin.com/in/arpit-kumar-j-819478302/" target="_blank" rel="noopener">linkedin.com/in/arpit-kumar-j</a></div>
+        <div class="ascii-panel">
+          <div class="field-row"><span class="field-key">EMAIL</span><a class="field-val" href="mailto:arpit.kr.jaiswal@gmail.com">arpit.kr.jaiswal@gmail.com</a></div>
+          <div class="field-row"><span class="field-key">GITHUB</span><a class="field-val" href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener">github.com/arpitkjaiswal</a></div>
+          <div class="field-row"><span class="field-key">LINKEDIN</span><a class="field-val" href="https://linkedin.com/in/arpit-kumar-j-819478302/" target="_blank" rel="noopener">linkedin.com/in/arpit-kumar-j</a></div>
         </div>
       </div>
     </div>
@@ -251,7 +258,7 @@
 
 <footer>
   <div class="container footer-inner">
-    <span>arpitkjaiswal — built with HTML / CSS / JS, single file</span>
+    <span>&gt; SESSION_ACTIVE — arpitkjaiswal — single-file HTML/CSS/JS</span>
     <span id="year"></span>
   </div>
 </footer>
