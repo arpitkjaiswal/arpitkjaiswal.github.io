@@ -1,10 +1,13 @@
-import './project-library.mjs?v=20261106-ux2';
-import {getProjects} from './project-catalog.mjs?v=20261106-ux2';
-import {spotlightProjects} from './catalog-core.mjs?v=20261106-ux2';
-import './visual-studio.mjs?v=20261106-ux2';
-import {ExplorerProgress,moveProjectIndex,mapHandPointer} from './deck-core.mjs?v=20261106-ux2';
-import {particleShape} from './interaction-core.mjs?v=20261106-ux2';
-import {startHandNavigation} from './hand-navigation.mjs?v=20261106-ux2';
+import './guided-tour.mjs?v=20261107-orbit';
+import {getRenderState} from './render-runtime.mjs?v=20261107-orbit';
+import {FramePacer,DrawBudget} from './motion-core.mjs?v=20261107-orbit';
+import './project-library.mjs?v=20261107-orbit';
+import {getProjects} from './project-catalog.mjs?v=20261107-orbit';
+import {spotlightProjects} from './catalog-core.mjs?v=20261107-orbit';
+import './visual-studio.mjs?v=20261107-orbit';
+import {ExplorerProgress,moveProjectIndex,mapHandPointer} from './deck-core.mjs?v=20261107-orbit';
+import {particleShape} from './interaction-core.mjs?v=20261107-orbit';
+import {startHandNavigation} from './hand-navigation.mjs?v=20261107-orbit';
 
 const $=selector=>document.querySelector(selector),$$=selector=>[...document.querySelectorAll(selector)];
 const root=document.documentElement,deck=$('#commandDeck'),map=$('#deckMap'),portals=$('#deckPortals');
@@ -14,13 +17,17 @@ const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const info=$('#deckInfoDialog'),preview=$('#cameraPreview'),previewHome=preview.parentElement,previewNext=preview.nextSibling;
 const progress=new ExplorerProgress(getProjects().map(p=>p.id));
 const positions=[[19,17],[51,10],[82,21],[13,46],[83,48],[48,50],[23,77],[52,85],[81,77]];
-let active=false,selected=0,lastInteraction=performance.now(),lastTour=0,activeCamera=false,tourEnabled=false;
+let active=false,selected=0,lastInteraction=performance.now(),activeCamera=false;
+let renderedProject=null,mapGeometry={x:0,y:0,width:1,height:1},adaptiveEco=false,budget=getRenderState().budget;
+const pacer=new FramePacer(budget.fps),drawBudget=new DrawBudget();
+const canRender=()=>active&&!document.hidden&&!getRenderState().dialogOpen;
+const particleBuckets=Array.from({length:12},()=>[]);
 let width=1,height=1,dpr=1,clock=0,lastFrame=0,frame=0,paused=root.classList.contains('motion-paused');
 let pointer={x:.5,y:.5},ship={x:.5,y:.5,shown:false},anchors=[];
 let scene='galaxy',previousScene='galaxy',morphAt=-10,accent='#71efff';
 const pulses=[],canvas=$('#deckCanvas'),ctx=canvas.getContext('2d');
 const sceneNames=['reactor','galaxy','vortex','aurora'];
-const shapes=Object.fromEntries(sceneNames.map(name=>[name,Array.from({length:740},(_,i)=>particleShape(i,740,name))]));
+const shapes=Object.fromEntries(sceneNames.map(name=>[name,Array.from({length:640},(_,i)=>particleShape(i,640,name))]));
 function say(message){if($('#deckTransmission').textContent!==message)$('#deckTransmission').textContent=message;}
 function dispatch(name,detail){return document.dispatchEvent(new CustomEvent(name,{detail}));}
 function command(text){lastInteraction=performance.now();return document.dispatchEvent(new CustomEvent('portfolio:execute',{cancelable:true,detail:{text}}));}
@@ -54,6 +61,7 @@ function setTarget(index,{source='manual',focus=false}={}){
   selected=((index%projects.length)+projects.length)%projects.length;
   if(source!=='auto')lastInteraction=performance.now();
   const project=projects[selected];
+  if(renderedProject===project){if(focus)$(`[data-deck-project="${project.id}"]`)?.focus({preventScroll:true});return;}renderedProject=project;
   $$('.deck-portal').forEach((button,i)=>{button.classList.toggle('selected',i===selected);button.setAttribute('aria-pressed',String(i===selected));});
   const box=$('#deckPreview');box.style.setProperty('--project-color',project.color);
   box.innerHTML=`${project.art?`<img class="deck-preview-art" src="${project.art}" width="720" height="440" alt="Illustrative artwork for ${escape(project.name)}">`:`<div class="deck-preview-symbol" aria-hidden="true">${project.symbol}</div>`}<h3>${escape(project.name)}</h3><p class="deck-preview-stage">${escape(project.stage)}</p><p class="deck-preview-description">${escape(project.description)}</p><div class="deck-preview-tags">${project.tags.map(tag=>`<span>${escape(tag)}</span>`).join('')}</div>`;
@@ -88,12 +96,12 @@ function activate({changeHash=true}={}){
   active=true;deck.hidden=false;root.classList.add('deck-mode');
   $('#deckCameraDock').appendChild(preview);
   if(changeHash&&location.hash!=='#deck')location.hash='#deck';
-  window.scrollTo(0,0);resize();schedule();
+  window.scrollTo(0,0);dispatch('portfolio:mode',{deck:true});resize();schedule();
 }
 function deactivate(){
   active=false;$$('dialog[open]').forEach(dialog=>dialog.close());
   if(document.fullscreenElement===root)document.exitFullscreen().catch(()=>{});
-  root.classList.remove('deck-mode');deck.hidden=true;
+  root.classList.remove('deck-mode');deck.hidden=true;dispatch('portfolio:mode',{deck:false});
   previewHome.insertBefore(preview,previewNext?.parentNode===previewHome?previewNext:null);
   if(frame)cancelAnimationFrame(frame);frame=0;lastFrame=0;
 }
@@ -103,7 +111,7 @@ function showInfo(kind){
   const text={
     about:{title:'The human behind the interface.',body:'<p>I’m <strong>Arpit Kumar Jaiswal</strong>, a B.Tech Information Technology student at MIT Manipal. I build backends, AI experiments, and interfaces with a little personality.</p><p>This universe brings together selected projects and a live library from my GitHub: voice companions, encrypted data, document research, web workspaces, and an orbital-defense game.</p><p>My process is simple: ask a good question, build something, find its limits, and make it better.</p><div class="deck-modal-links"><a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener noreferrer" data-hand-action="external:github">GitHub ↗</a><a href="#home" data-hand-action="nav:home">Classic portfolio ↗</a></div>'},
     contact:{title:'Open a connection.',body:'<p>Have a project, an opportunity, or a good question? Say hello.</p><div class="deck-modal-links"><a href="mailto:arpit.kr.jaiswal@gmail.com" data-hand-action="external:email">arpit.kr.jaiswal@gmail.com ↗</a><a href="https://www.linkedin.com/in/arpit-kumar-jaiswal-819478302" target="_blank" rel="noopener noreferrer" data-hand-action="external:linkedin">LinkedIn ↗</a><a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener noreferrer" data-hand-action="external:github">GitHub ↗</a></div>'},
-    help:{title:'You have the controls.',body:'<p>Click <strong>Enable camera</strong> and allow browser permission. Raise an open hand; your index finger becomes the cursor. Point at a project, then briefly hold a <strong>thumb + index pinch</strong> to open it. Release before selecting again.</p><div class="deck-help-grid"><div><h3>Hands &amp; keyboard</h3><dl><div><dt>Point, then pinch</dt><dd>Select a portal, navigation item, or project button.</dd></div><div><dt>Open palm near a screen edge</dt><dd>Scroll a long project file or narrow map.</dd></div><div><dt>Peace sign · hold</dt><dd>Target the next project.</dd></div><div><dt>WASD / arrows · Enter</dt><dd>Move between portals anywhere on the deck, then open the target.</dd></div><div><dt>1–9 · / · Space</dt><dd>Quick-open a spotlight project, search all projects, or send an energy pulse.</dd></div><div><dt>Escape · ?</dt><dd>Close a panel; stop active inputs from the deck. Press ? for this guide.</dd></div></dl></div><div><h3>Say “Jarvis”, then…</h3><button data-deck-command="open LEXA" data-hand-action="execute:open LEXA">open LEXA</button><button data-deck-command="open project two" data-hand-action="execute:open project two">open project two</button><button data-deck-command="next project" data-hand-action="execute:next project">next project</button><button data-deck-command="open selected project" data-hand-action="execute:open selected project">open selected project</button><button data-deck-command="change color" data-hand-action="execute:change color">change color</button><button data-deck-command="close project" data-hand-action="execute:close project">close project</button><button data-deck-command="stop all inputs" data-hand-action="execute:stop all inputs">stop all inputs</button><p>Type the same commands in the command box. Say “all projects” to search the full GitHub library. “Play Orbit Warden” launches its browser game; “source for LEXA” opens its code. Camera navigation uses this page’s controls only.</p></div></div><p>Camera and microphone require permission and compatible browser features. Hand tracking runs on your device; voice recognition may use your browser’s speech service. Neither input starts automatically.</p>'}
+    help:{title:'You have the controls.',body:'<p>Click <strong>Enable camera</strong> and allow browser permission. Raise an open hand; your index finger becomes the cursor. Point at a project, then briefly hold a <strong>thumb + index pinch</strong> to open it. Release before selecting again.</p><div class="deck-help-grid"><div><h3>Hands &amp; keyboard</h3><dl><div><dt>Point, then pinch</dt><dd>Select a portal, navigation item, or project button.</dd></div><div><dt>Open palm near a screen edge</dt><dd>Scroll a long project file or narrow map.</dd></div><div><dt>Peace sign · hold</dt><dd>Target the next project.</dd></div><div><dt>WASD / arrows · Enter</dt><dd>Move between portals anywhere on the deck, then open the target.</dd></div><div><dt>1–9 · / · Space</dt><dd>Quick-open a spotlight project, search all projects, or send an energy pulse.</dd></div><div><dt>Escape · ?</dt><dd>Close a panel; stop active inputs from the deck. Press ? for this guide.</dd></div></dl></div><div><h3>Say “Jarvis”, then…</h3><button data-deck-command="open LEXA" data-hand-action="execute:open LEXA">open LEXA</button><button data-deck-command="open project two" data-hand-action="execute:open project two">open project two</button><button data-deck-command="next project" data-hand-action="execute:next project">next project</button><button data-deck-command="open selected project" data-hand-action="execute:open selected project">open selected project</button><button data-deck-command="change color" data-hand-action="execute:change color">change color</button><button data-deck-command="close project" data-hand-action="execute:close project">close project</button><button data-deck-command="stop all inputs" data-hand-action="execute:stop all inputs">stop all inputs</button><p>Choose Talk to Jarvis for one-shot listening (no wake word needed) or optional hands-free mode. Type the same commands in the command box. Say “all projects” to search the full GitHub library. “Play Orbit Warden” launches its browser game; “source for LEXA” opens its code. Camera navigation uses this page’s controls only.</p></div></div><p>Camera and microphone require permission and compatible browser features. Hand tracking runs on your device; voice recognition may use your browser’s speech service. Neither input starts automatically.</p>'}
   }[kind];if(!text)return;
   $('#deckInfoTitle').textContent=text.title;content.innerHTML=text.body;
   $$('[data-deck-command]').forEach(button=>button.addEventListener('click',()=>command(button.dataset.deckCommand)));
@@ -111,7 +119,7 @@ function showInfo(kind){
 }
 function deckAction(action){
   if(action==='classic'){navigateClassic();return;}
-  if(action==='library'){dispatch('portfolio:library');return;}
+  if(action==='library'){dispatch('portfolio:library',{filter:'all',query:''});return;}
   if(action==='back'){
     const dialog=document.querySelector('dialog[open]');if(dialog){dialog.close();say('Back to the constellation.');}else if(!active)activate();
     return;
@@ -124,7 +132,7 @@ function deckAction(action){
 }
 function navigate(target){
   if(target==='deck'){activate();return;}
-  if(active&&target==='work'){dispatch('portfolio:library');return;}
+  if(active&&target==='work'){dispatch('portfolio:library',{filter:'all',query:''});return;}
   if(active&&target==='home'){deckAction('home');return;}
   if(active&&['about','contact'].includes(target)){showInfo(target);return;}
   navigateClassic(target);
@@ -141,8 +149,9 @@ $('#deckCoachDismiss').addEventListener('click',()=>{$('#deckCoach').hidden=true
 try{$('#deckCoach').hidden=sessionStorage.getItem('arpit.coach.v2')==='dismissed';}catch{}
 $('#deckStopInputs').addEventListener('click',()=>command('stop all inputs'));
 $('#deckDismissInput').addEventListener('click',()=>$('#deckInputTray').hidden=true);
-$('#deckTour').addEventListener('click',()=>command(tourEnabled?'autopilot off':'autopilot on'));
-document.addEventListener('portfolio:autopilot',event=>{tourEnabled=event.detail?.enabled===true;$('#deckTour').setAttribute('aria-pressed',String(tourEnabled));$('#deckTour').textContent=tourEnabled?'Tour on':'Auto tour';if(active)say(tourEnabled?'Auto tour on. Spotlight projects advance when you are idle.':'Auto tour off. Choose a project at your own pace.');});
+$('#deckTour').addEventListener('click',()=>dispatch('portfolio:tour',{action:'toggle'}));
+document.addEventListener('portfolio:tour-state',event=>{const on=event.detail?.status!=='off';$('#deckTour').setAttribute('aria-pressed',String(on));$('#deckTour').textContent=on?'Exit tour':'Start tour ↗';});
+document.addEventListener('portfolio:tour-target',event=>{const index=projects.findIndex(project=>project.id===event.detail?.id);if(index>=0)setTarget(index,{source:'auto'});});
 const proxies={deckCamera:'cameraToggle',deckVoice:'voiceToggle',deckSound:'soundToggle',deckPause:'motionToggle',deckPalette:'paletteToggle'};
 for(const [button,target] of Object.entries(proxies))$('#'+button).addEventListener('click',()=>{
   lastInteraction=performance.now();$('#'+target).click();
@@ -199,18 +208,19 @@ function activateHandAction(action,element){
   lastInteraction=performance.now();
   if(kind==='project')openProject(value);
   else if(kind==='source'||kind==='demo')visitDestination(value,kind);
-  else if(kind==='dialog-close')element.closest('dialog')?.close();
+  else if(kind==='dialog-close')element.click();
   else if(kind==='nav'){
     if(value==='home')navigateClassic();else if(value==='library')dispatch('portfolio:library');else if(['about','contact','work','playground','deck'].includes(value))navigate(value);
     else if(value==='map')deckAction('home');else if(value==='lab')navigateClassic('playground');else if(value==='help')showInfo('help');
   }
   else if(kind==='execute')command(value);
+  else if(kind==='tour'){if(value==='stop')$('#tourExit').click();else if(value==='toggle-play')$('#tourPlay').click();else if(value.startsWith('chapter:'))$('#tourChapters').children[Number(value.split(':')[1])]?.click();else dispatch('portfolio:tour',{action:value});}
   else if(kind==='library-filter'&&['all','featured','ai','systems','web','play'].includes(value))$(`[data-library-filter="${value}"]`)?.click();
   else if(kind==='filter'&&['all','ai','systems','web','play'].includes(value))$(`[data-filter="${value}"]`)?.click();
   else if(kind==='scene'&&sceneNames.includes(value))$(`[data-scene="${value}"]`)?.click();
   else if(kind==='external'&&external[value])location.assign(external[value]);
   else if(kind==='control'){
-    const controls={sound:'soundToggle',pause:'motionToggle',palette:'paletteToggle',stop:'stopAllInputs','stop-camera':'cameraToggle','stop-voice':'voiceToggle',burst:'energyBurst',refresh:'libraryRefresh',tour:'deckTour'};
+    const controls={sound:'soundToggle',pause:'motionToggle',palette:'paletteToggle',stop:'stopAllInputs','stop-camera':'cameraToggle','stop-voice':'voiceToggle',burst:'energyBurst',refresh:'libraryRefresh',tour:'deckTour','jarvis-listen':'jarvisListen'};
     if(controls[value])$('#'+controls[value])?.click();
   }
 }
@@ -229,7 +239,7 @@ startHandNavigation({onActivate:activateHandAction,onHover:element=>{
   if(element?.dataset.deckProject){const index=projects.findIndex(project=>project.id===element.dataset.deckProject);if(index>=0)setTarget(index,{source:'hand'});}
 }});
 document.addEventListener('keydown',event=>{
-  if(!active||event.defaultPrevented||event.ctrlKey||event.metaKey||event.altKey||document.querySelector('dialog[open]'))return;
+  if(!active||root.classList.contains('tour-mode')||event.defaultPrevented||event.ctrlKey||event.metaKey||event.altKey||document.querySelector('dialog[open]'))return;
   if(event.key==='Escape'){
     if($('#cameraToggle').getAttribute('aria-pressed')==='true'||$('#voiceToggle').getAttribute('aria-pressed')==='true')command('stop all inputs');
     return;
@@ -244,9 +254,9 @@ document.addEventListener('keydown',event=>{
 });
 map.addEventListener('pointermove',event=>{
   const rect=map.getBoundingClientRect();pointer.x=(event.clientX-rect.left)/rect.width;pointer.y=(event.clientY-rect.top)/rect.height;
-  ship={x:pointer.x,y:pointer.y,shown:true};lastInteraction=performance.now();
+  ship={x:pointer.x,y:pointer.y,shown:true};updateShip();lastInteraction=performance.now();
 },{passive:true});
-map.addEventListener('pointerleave',()=>{ship.shown=false;});
+map.addEventListener('pointerleave',()=>{ship.shown=false;updateShip();});
 map.addEventListener('scroll',()=>{cacheAnchors();lastInteraction=performance.now();},{passive:true});
 $('#deckFullscreen').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await root.requestFullscreen();}catch{say('The command deck already fills this page. Browser fullscreen is unavailable here.');}});
 document.addEventListener('fullscreenchange',()=>{const full=Boolean(document.fullscreenElement);$('#deckFullscreen').setAttribute('aria-pressed',String(full));$('#deckFullscreen').setAttribute('aria-label',full?'Exit browser fullscreen':'Enter browser fullscreen');$('#deckFullscreen').textContent=full?'↙':'⤢';});
@@ -255,6 +265,7 @@ window.addEventListener('hashchange',route);
 
 function cacheAnchors(){
   const origin=deck.getBoundingClientRect(),mapRect=map.getBoundingClientRect();
+  mapGeometry={x:mapRect.left-origin.left,y:mapRect.top-origin.top,width:Math.max(1,mapRect.width),height:Math.max(1,mapRect.height)};
   anchors=$$('.deck-portal').map((button,index)=>{
     const rect=button.getBoundingClientRect();return {x:rect.left+rect.width/2-origin.left,y:rect.top+rect.height/2-origin.top,index,visible:rect.bottom>mapRect.top&&rect.top<mapRect.bottom};
   });
@@ -263,15 +274,15 @@ function resize(){
   if(!active)return;
   const visibleHeight=window.visualViewport?.height||innerHeight;
   deck.style.setProperty('--deck-height',`${visibleHeight}px`);
-  const rect=deck.getBoundingClientRect();width=Math.max(1,rect.width);height=Math.max(1,rect.height);dpr=Math.min(devicePixelRatio||1,1.5);
+  const rect=deck.getBoundingClientRect();width=Math.max(1,rect.width);height=Math.max(1,rect.height);dpr=Math.min(devicePixelRatio||1,budget.dpr);
   canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx?.setTransform(dpr,0,0,dpr,0,0);
   cacheAnchors();draw();
 }
 function draw(){
-  if(!active||!ctx)return;
-  const mapRect=map.getBoundingClientRect(),deckRect=deck.getBoundingClientRect();
-  const cx=mapRect.left-deckRect.left+mapRect.width*.5+(pointer.x-.5)*12;
-  const cy=mapRect.top-deckRect.top+mapRect.height*.5+(pointer.y-.5)*10;
+  if(!canRender()||!ctx)return;
+  const started=performance.now(),mapRect=mapGeometry;
+  const cx=mapRect.x+mapRect.width*.5+(pointer.x-.5)*12;
+  const cy=mapRect.y+mapRect.height*.5+(pointer.y-.5)*10;
   const radius=Math.min(mapRect.width*.34,mapRect.height*.38,220);
   ctx.clearRect(0,0,width,height);
   ctx.fillStyle='#050b13';ctx.fillRect(0,0,width,height);
@@ -279,7 +290,7 @@ function draw(){
   cloud.addColorStop(0,'#17537542');cloud.addColorStop(.4,'#0c284127');cloud.addColorStop(1,'#050a1100');ctx.fillStyle=cloud;ctx.fillRect(0,0,width,height);
   const purple=ctx.createRadialGradient(width*.79,height*.34,0,width*.79,height*.34,width*.5);purple.addColorStop(0,'#52376412');purple.addColorStop(1,'#00000000');ctx.fillStyle=purple;ctx.fillRect(0,0,width,height);
   // A drifting star field and a perspective navigation grid.
-  for(let i=0;i<160;i++){
+  for(let i=0;i<budget.stars;i++){
     const x=(i*137.507+Math.sin(clock*.03+i)*19+width)%width;
     const y=((i*83.123-clock*(.4+i%3))%height+height)%height;
     ctx.globalAlpha=.13+(i%5)*.06;ctx.fillStyle=i%7===0?'#bba5e8':'#9adcea';ctx.fillRect(x,y,i%13===0?1.8:.8,i%13===0?1.8:.8);
@@ -289,7 +300,7 @@ function draw(){
   for(let i=-6;i<=6;i++){ctx.beginPath();ctx.moveTo(cx+i*22,cy);ctx.lineTo(cx+i*210,height);ctx.stroke();}
   for(let i=0;i<9;i++){const t=i/8,y=cy+(height-cy)*t*t;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(width,y);ctx.stroke();}
   // Connections point to the actual project portals; they are navigational artwork.
-  for(const anchor of anchors){
+  for(const anchor of root.classList.contains('tour-mode')?[]:anchors){
     if(!anchor.visible)continue;
     const selectedNode=anchor.index===selected;
     ctx.strokeStyle=selectedNode?'#85e8ff53':'#74b4d21a';ctx.lineWidth=selectedNode?.85:.55;
@@ -306,13 +317,19 @@ function draw(){
   const from=shapes[previousScene],to=shapes[scene],rotation=clock*.075;
   const co=Math.cos(rotation),si=Math.sin(rotation);
   ctx.save();ctx.globalCompositeOperation='lighter';
-  for(let i=0;i<to.length;i++){
-    const a=from[i],b=to[i];
+  for(const bucket of particleBuckets)bucket.length=0;
+  const total=budget.points;
+  for(let index=0;index<total;index++){
+    const i=Math.floor(index*to.length/total),a=from[i],b=to[i];
     const x=a[0]+(b[0]-a[0])*blend,y=a[1]+(b[1]-a[1])*blend,z=a[2]+(b[2]-a[2])*blend;
     const rx=x*co+z*si,depth=-x*si+z*co,perspective=3/(3-depth*.25);
     const sx=cx+rx*radius*perspective,sy=cy+y*radius*perspective;
-    ctx.globalAlpha=.1+(depth+1.2)*.12;ctx.fillStyle=i%17===0?'#bca4f7':i%5===0?'#d4ff63':'#71efff';
-    ctx.beginPath();ctx.arc(sx,sy,.5+(depth+1.1)*.29,0,Math.PI*2);ctx.fill();
+    const color=i%17===0?2:i%5===0?1:0,layer=Math.max(0,Math.min(3,Math.floor((depth+1.2)/.6)));
+    particleBuckets[color*4+layer].push(sx,sy,.5+Math.max(0,depth+1.1)*.29);
+  }
+  for(let group=0;group<particleBuckets.length;group++){
+    const bucket=particleBuckets[group];ctx.globalAlpha=.12+(group%4)*.065;ctx.fillStyle=['#71efff','#d4ff63','#bca4f7'][Math.floor(group/4)];ctx.beginPath();
+    for(let i=0;i<bucket.length;i+=3){const x=bucket[i],y=bucket[i+1],r=bucket[i+2];ctx.moveTo(x+r,y);ctx.arc(x,y,r,0,Math.PI*2);}ctx.fill();
   }
   ctx.restore();
   // Orbital instrument markings stay alive without moving the clickable targets.
@@ -321,37 +338,34 @@ function draw(){
     ctx.strokeStyle=orbit===1?'#d4ff6322':'#71efff26';ctx.lineWidth=.6;ctx.beginPath();ctx.ellipse(0,0,radius*(1.15+orbit*.2),radius*(.3+orbit*.2),0,0,Math.PI*2);ctx.stroke();ctx.restore();
   }
   ctx.save();ctx.translate(cx,cy);ctx.strokeStyle='#7edcf542';ctx.lineWidth=.6;
-  for(let i=0;i<80;i++){const a=i/80*Math.PI*2+clock*.03,r=radius*1.43;ctx.beginPath();ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r);ctx.lineTo(Math.cos(a)*(r+(i%10===0?8:3)),Math.sin(a)*(r+(i%10===0?8:3)));ctx.stroke();}ctx.restore();
+  ctx.beginPath();for(let i=0;i<80;i++){const a=i/80*Math.PI*2+clock*.03,r=radius*1.43;ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r);ctx.lineTo(Math.cos(a)*(r+(i%10===0?8:3)),Math.sin(a)*(r+(i%10===0?8:3)));}ctx.stroke();ctx.restore();
   const sweep=(clock*.035)%1;ctx.strokeStyle='#75dce50e';ctx.beginPath();ctx.moveTo(0,sweep*height);ctx.lineTo(width,sweep*height);ctx.stroke();
   const meteor=(clock%9)/9;
   if(meteor<.18){const x=width*(1.15-meteor*4),y=height*(.17+meteor);const tail=ctx.createLinearGradient(x,y,x+120,y-25);tail.addColorStop(0,'#a9eaff88');tail.addColorStop(1,'#a9eaff00');ctx.strokeStyle=tail;ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+120,y-25);ctx.stroke();}
   for(let i=pulses.length-1;i>=0;i--){const age=clock-pulses[i].at;if(age>2.5){pulses.splice(i,1);continue;}ctx.globalAlpha=(1-age/2.5)*.45;ctx.strokeStyle='#d4ff63';ctx.lineWidth=.7;ctx.beginPath();ctx.arc(pulses[i].x,pulses[i].y,10+age*230,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;}
-  const marker=$('#deckShip');marker.classList.toggle('active',ship.shown);
-  marker.style.left=`${ship.x*100}%`;marker.style.top=`${ship.y*100}%`;
+  if(drawBudget.record(performance.now()-started)&&budget.name==='cinematic'){adaptiveEco=true;updateBudget();}
 }
+function updateShip(){const marker=$('#deckShip');marker.classList.toggle('active',ship.shown);marker.style.left='0';marker.style.top='0';marker.style.transform=`translate3d(${ship.x*mapGeometry.width}px,${ship.y*mapGeometry.height}px,0) translate(-50%,-50%)`;}
+function updateBudget(){const next=getRenderState().budget;budget=adaptiveEco?{...next,points:Math.min(next.points,320),stars:55,fps:next.fps?24:0,dpr:1,name:'eco'}:next;pacer.setRate(budget.fps);deck.dataset.quality=budget.name;resize();schedule();}
 function tick(now){
-  frame=0;if(!active||document.hidden||paused){lastFrame=0;return;}
-  if(!lastFrame||now-lastFrame>=1000/30){
-    const dt=lastFrame?Math.min((now-lastFrame)/1000,.08):.033;lastFrame=now;clock+=dt;
-    const interacting=document.activeElement?.matches('input,textarea,.deck-portal');
-    if(tourEnabled&&now-lastInteraction>10000&&now-lastTour>10000&&!activeCamera&&!interacting&&!document.querySelector('dialog[open]')){lastTour=now;setTarget(selected+1,{source:'auto'});}
-    draw();
-  }
+  frame=0;if(!canRender()||paused){lastFrame=0;pacer.reset();return;}
+  if(pacer.due(now)){const dt=lastFrame?Math.min((now-lastFrame)/1000,.08):.033;lastFrame=now;clock+=dt;draw();}
   schedule();
 }
-function schedule(){if(!frame&&active&&!paused&&!document.hidden)frame=requestAnimationFrame(tick);}
+function schedule(){if(!frame&&canRender()&&!paused)frame=requestAnimationFrame(tick);}
+document.addEventListener('portfolio:render-state',()=>{if(!canRender()){if(frame)cancelAnimationFrame(frame);frame=0;lastFrame=0;pacer.reset();}else updateBudget();});
 document.addEventListener('portfolio:burst',()=>{if(active){const target=anchors[selected]||{x:width/2,y:height/2};pulses.push({x:target.x,y:target.y,at:clock});if(pulses.length>4)pulses.shift();draw();}});
 document.addEventListener('portfolio:hand',event=>{
   const hand=event.detail;if(!active||!hand)return;
   lastInteraction=performance.now();
   const mapped=mapHandPointer(hand.cursorX??hand.x,hand.cursorY??hand.y);if(!mapped)return;
   const rect=map.getBoundingClientRect(),x=mapped.x*innerWidth,y=mapped.y*innerHeight;
-  ship={x:(x-rect.left)/rect.width,y:(y-rect.top)/rect.height,shown:x>=rect.left&&x<=rect.right&&y>=rect.top&&y<=rect.bottom};
+  ship={x:(x-rect.left)/rect.width,y:(y-rect.top)/rect.height,shown:x>=rect.left&&x<=rect.right&&y>=rect.top&&y<=rect.bottom};updateShip();
 });
 new MutationObserver(()=>{
   paused=root.classList.contains('motion-paused');accent=getComputedStyle(root).getPropertyValue('--accent').trim();
   deck.style.setProperty('--deck-cyan',root.dataset.palette==='coral'?'#ffa990':root.dataset.palette==='ice'?'#83e6f0':'#71efff');
-  lastFrame=0;syncControls();draw();schedule();
+  lastFrame=0;pacer.reset();syncControls();draw();schedule();
 }).observe(root,{attributes:true,attributeFilter:['class','data-palette']});
 if('ResizeObserver'in window)new ResizeObserver(resize).observe(map);else window.addEventListener('resize',resize,{passive:true});
 window.addEventListener('resize',resize,{passive:true});window.visualViewport?.addEventListener('resize',resize,{passive:true});

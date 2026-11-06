@@ -1,4 +1,4 @@
-import {cameraMessage} from './interaction-core.mjs?v=20261106-ux2';
+import {cameraMessage} from './interaction-core.mjs?v=20261107-orbit';
 
 // Matching, pinned JS/WASM versions; loaded only after explicit camera activation.
 export const VISION_CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21';
@@ -99,64 +99,85 @@ export class HandCamera {
 }
 
 export class VoiceControl {
-  constructor({Recognition=globalThis.SpeechRecognition || globalThis.webkitSpeechRecognition,
-    onState=()=>{}, onTranscript=()=>{}, language='en-IN', timeoutMs=15000}) {
-    Object.assign(this,{Recognition,onState,onTranscript,language,timeoutMs});
-    this.wanted=false; this.generation=0; this.recognition=null; this.restartTimer=0; this.startTimer=0; this.quickEnds=0;
+  constructor({Recognition=globalThis.SpeechRecognition||globalThis.webkitSpeechRecognition,onState=()=>{},onTranscript=()=>{},onHeard=()=>{},language='en-IN',timeoutMs=15000,onceTimeoutMs=20000,now=()=>Date.now(),setTimer=(callback,delay)=>setTimeout(callback,delay),clearTimer=id=>clearTimeout(id)}){
+    Object.assign(this,{Recognition,onState,onTranscript,onHeard,language,timeoutMs,onceTimeoutMs,now,setTimer,clearTimer});
+    this.wanted=false;this.mode='once';this.generation=0;this.recognition=null;this.restartTimer=0;this.startTimer=0;this.sessionTimer=0;this.quickEnds=0;this.silenceRounds=0;this.suspended=false;
   }
-  start() {
-    if (this.wanted) return;
-    if (!this.Recognition) { this.onState({state:'unsupported',message:'Voice is unavailable in this browser. Type a command below instead.'}); return; }
-    this.wanted=true; const generation=++this.generation; this.quickEnds=0;
+  report(state,message){this.onState({state,message,wanted:this.wanted,mode:this.mode,suspended:this.suspended});}
+  clearTimers(){for(const key of ['restartTimer','startTimer','sessionTimer']){this.clearTimer(this[key]);this[key]=0;}}
+  start({mode='once',language=this.language}={}){
+    if(this.wanted)return;
+    if(!this.Recognition){this.report('unsupported','Voice is unavailable in this browser. Every command also works by typing.');return;}
+    this.mode=mode==='handsfree'?'handsfree':'once';this.language=language;this.wanted=true;this.suspended=false;this.quickEnds=0;this.silenceRounds=0;
+    const generation=++this.generation;
+    if(this.mode==='once')this.sessionTimer=this.setTimer(()=>{if(this.wanted&&generation===this.generation)this.stop('Listening finished. Tap Listen once to try another command.');},this.onceTimeoutMs);
     this.open(generation);
   }
-  open(generation) {
-    if (!this.wanted || generation!==this.generation) return;
+  open(generation){
+    if(!this.wanted||this.suspended||generation!==this.generation)return;
     let recognition;
-    try { recognition=new this.Recognition(); }
-    catch { this.fail('Speech recognition could not start. Use the command box instead.'); return; }
+    try{recognition=new this.Recognition();}catch{this.fail('Speech recognition could not start. Type your command, or try again.');return;}
     this.recognition=recognition;
-    recognition.lang=this.language; recognition.continuous=true; recognition.interimResults=false; recognition.maxAlternatives=1;
-    const started=Date.now();
-    const current=()=>this.wanted && generation===this.generation && this.recognition===recognition;
-    recognition.onstart=()=>{if(current()){clearTimeout(this.startTimer);this.onState({state:'listening',message:'Listening. Say “Jarvis”, then a command.'});}};
+    recognition.lang=this.language;recognition.continuous=false;recognition.interimResults=true;recognition.maxAlternatives=3;
+    const started=this.now(),processed=new Set();let heardSpeech=false;
+    const current=()=>this.wanted&&!this.suspended&&generation===this.generation&&this.recognition===recognition;
+    recognition.onstart=()=>{if(!current())return;this.clearTimer(this.startTimer);this.startTimer=0;this.report('listening',this.mode==='once'?'Listening once. Say your command; “Jarvis” is optional.':'Hands-free ready. Say “Jarvis”, then a command.');};
     recognition.onresult=event=>{
       if(!current())return;
       for(let index=event.resultIndex;index<event.results.length;index++){
         if(!current())break;
-        if(event.results[index].isFinal) this.onTranscript(event.results[index][0].transcript);
+        const result=event.results[index],alternatives=Array.from({length:Math.min(result.length||1,3)},(_,i)=>result[i]?.transcript).filter(x=>typeof x==='string').map(x=>x.trim().slice(0,180));
+        const text=alternatives[0]||'';if(!text)continue;heardSpeech=true;
+        const key=index+':'+text;if(result.isFinal&&processed.has(key))continue;
+        this.onHeard({text,final:result.isFinal===true,alternatives});
+        if(!result.isFinal)continue;
+        processed.add(key);this.silenceRounds=0;
+        const decision=this.onTranscript(text,{alternatives:alternatives.slice(1),confidence:result[0]?.confidence});
+        if(this.mode==='once'&&this.wanted&&decision?.keepListening!==true){this.stop('Command received. Tap Listen once whenever you need me.');break;}
       }
     };
+    recognition.onnomatch=()=>{if(current())this.report('listening','I couldn’t match that. Try “open LEXA”, or type a command.');};
     recognition.onerror=event=>{
       if(!current())return;
-      if(event.error==='no-speech')return;
+      if(event.error==='no-speech'){
+        if(this.mode==='once')this.stop('No speech detected. Tap Listen once, then speak close to your microphone.');
+        return;
+      }
       const messages={
-        'not-allowed':'Microphone permission was denied. You can type commands instead.',
-        'service-not-allowed':'Your browser’s speech service is unavailable. Type a command instead.',
-        'audio-capture':'No microphone is available. Connect one, or use the command box.',
-        'network':'The speech service could not connect. Check your network, or type commands.',
-        'language-not-supported':'This speech language is unavailable. Type a command instead.'
+        'not-allowed':'Microphone permission was denied or blocked. Allow this site’s microphone in your browser’s site controls, then try Listen once.',
+        'service-not-allowed':'This browser’s speech service is unavailable. Type a command or try a browser with speech recognition.',
+        'audio-capture':'No microphone is available. Check your microphone connection and browser input settings.',
+        'network':'The browser speech service could not connect. Check your connection, or type the same command.',
+        'language-not-supported':'That speech language is unavailable. Choose another English language setting and try again.',
+        'aborted':'Voice capture was interrupted. Tap Listen once to reconnect.'
       };
-      this.fail(messages[event.error] || 'Voice control stopped. Try again or type your command.');
+      this.fail(messages[event.error]||'Voice control stopped. Try Listen once, or type your command.');
     };
     recognition.onend=()=>{
       if(!current())return;
-      clearTimeout(this.startTimer);
-      this.quickEnds=Date.now()-started<1500 ? this.quickEnds+1 : 0;
-      if(this.quickEnds>=3){this.fail('The speech service keeps disconnecting. Try later or type a command.');return;}
-      this.onState({state:'starting',message:'Voice is reconnecting…'});
-      this.restartTimer=setTimeout(()=>this.open(generation),500);
+      this.clearTimer(this.startTimer);this.startTimer=0;this.recognition=null;
+      this.quickEnds=!heardSpeech&&this.now()-started<1200?this.quickEnds+1:0;
+      if(!heardSpeech)this.silenceRounds++;
+      if(this.quickEnds>=3||this.silenceRounds>=3){this.fail('The speech service is ending without a command. Check microphone permission, or use Listen once / typing.');return;}
+      this.report('starting',this.mode==='handsfree'?'Reconnecting hands-free listening…':'Ready for the rest of your command…');
+      const delay=Math.min(1600,350*Math.max(1,this.quickEnds));
+      this.restartTimer=this.setTimer(()=>{this.restartTimer=0;this.open(generation);},delay);
     };
-    this.onState({state:'starting',message:'Allow microphone access for voice commands.'});
-    this.startTimer=setTimeout(()=>{if(current())this.fail('Voice startup timed out. Try again or type a command.');},this.timeoutMs);
-    try { recognition.start(); } catch { this.fail('Voice could not start. Try again or use the command box.'); }
+    this.report('starting','Allow microphone access if your browser asks.');
+    this.startTimer=this.setTimer(()=>{if(current())this.fail('Microphone startup timed out. Check this site’s microphone permission, then try again.');},this.timeoutMs);
+    try{recognition.start();}catch{this.fail('The microphone could not start. Check site permission, or type your command.');}
   }
-  fail(message){this.stop();this.onState({state:'error',message});}
-  stop(message='Voice off. The command box is always available.') {
-    this.wanted=false; ++this.generation;
-    clearTimeout(this.restartTimer);clearTimeout(this.startTimer);
-    const recognition=this.recognition;this.recognition=null;
-    try { recognition?.abort(); } catch { /* Already stopped. */ }
-    this.onState({state:'off',message});
+  suspend(){
+    if(!this.wanted)return null;if(this.suspended)return this.generation;
+    this.suspended=true;const token=++this.generation;this.clearTimers();const recognition=this.recognition;this.recognition=null;
+    try{recognition?.abort();}catch{}
+    this.report('speaking','Speaking. Microphone commands are paused to prevent an echo.');return token;
+  }
+  resume(token){if(!this.wanted||!this.suspended||token!==this.generation)return false;this.suspended=false;this.quickEnds=0;if(this.mode==='once'){const generation=this.generation;this.sessionTimer=this.setTimer(()=>{if(this.wanted&&generation===this.generation)this.stop('Listening finished. Tap Listen once to try another command.');},this.onceTimeoutMs);}this.open(this.generation);return true;}
+  fail(message){this.stop();this.report('error',message);}
+  stop(message='Voice off. Type a command or tap Listen once when you’re ready.'){
+    this.wanted=false;this.suspended=false;++this.generation;this.clearTimers();const recognition=this.recognition;this.recognition=null;
+    try{recognition?.abort();}catch{}
+    this.report('off',message);
   }
 }

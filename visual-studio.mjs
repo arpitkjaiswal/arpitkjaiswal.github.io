@@ -1,5 +1,10 @@
-import {SCENES, clamp, readHands, PoseLatch, parseCommand, particleShape} from './interaction-core.mjs?v=20261106-ux2';
-import {HandCamera, VoiceControl, handGraphicsAvailable} from './input-controllers.mjs?v=20261106-ux2';
+import './jarvis-ui.mjs?v=20261107-orbit';
+import {JarvisSession} from './jarvis-core.mjs?v=20261107-orbit';
+import {sayText,cancelSpeech,enableReplies,setSpeechHooks,isSpeaking} from './speech-output.mjs?v=20261107-orbit';
+import {FramePacer} from './motion-core.mjs?v=20261107-orbit';
+import {getRenderState} from './render-runtime.mjs?v=20261107-orbit';
+import {SCENES, clamp, readHands, PoseLatch, parseCommand, particleShape} from './interaction-core.mjs?v=20261107-orbit';
+import {HandCamera, VoiceControl, handGraphicsAvailable} from './input-controllers.mjs?v=20261107-orbit';
 
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
@@ -10,10 +15,13 @@ const ambient=$('#ambientCanvas'), ambientCtx=ambient.getContext('2d');
 const handOverlay=$('#handOverlay'), handCtx=handOverlay.getContext('2d');
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 const compact=matchMedia('(max-width:680px)').matches;
-const count=compact?640:1280;
+const count=compact?320:640;
+const studioPacer=new FramePacer(compact?24:30);
+const canRenderStudio=()=>!root.classList.contains('deck-mode')&&!getRenderState().dialogOpen&&!document.hidden&&Boolean(location.hash&&location.hash!=='#deck');
 $('#nodeCount').textContent=count.toLocaleString('en-US');
 if(compact)$('#visualCommand').placeholder='Type a command…';
-const shapes=Object.fromEntries(SCENES.map(scene=>[scene,Array.from({length:count},(_,i)=>particleShape(i,count,scene))]));
+const shapes={};
+const shapeFor=scene=>shapes[scene]||(shapes[scene]=Array.from({length:count},(_,i)=>particleShape(i,count,scene)));
 const sceneCopy={
   reactor:{title:'REACTOR',line:'Good questions. Limitless energy.'},
   galaxy:{title:'GALAXY',line:'A thousand little possibilities.'},
@@ -72,10 +80,10 @@ function burst(source='manual'){
 }
 function updateBeacon(){
   const cameraOn=cameraState==='tracking'||cameraState==='requesting'||cameraState==='loading';
-  const voiceOn=voiceState==='listening'||voiceState==='starting';
+  const voiceOn=voiceState==='listening'||voiceState==='starting'||voiceState==='speaking';
   $('#inputBeacon').hidden=!cameraOn&&!voiceOn;
   document.dispatchEvent(new CustomEvent('portfolio:inputs',{detail:{camera:cameraState,voice:voiceState}}));
-  $('#beaconLabel').textContent=[cameraOn?(cameraState==='requesting'?'CAMERA STARTING':'CAMERA ON'):'',voiceOn?(voiceState==='starting'?'MIC STARTING':'MIC ON'):''].filter(Boolean).join(' + ');
+  $('#beaconLabel').textContent=[cameraOn?(cameraState==='requesting'?'CAMERA STARTING':'CAMERA ON'):'',voiceOn?(voiceState==='speaking'?'MIC PAUSED · SPEAKING':voiceState==='starting'?'MIC STARTING':'MIC ON'):''].filter(Boolean).join(' + ');
 }
 function drawHandOverlay(landmarks){
   const w=352,h=264;
@@ -114,35 +122,36 @@ const camera=new HandCamera({video:$('#handVideo'),
     if(paused)draw();
   }
 });
-function speak(message){
-  if(!voice.wanted||$('#soundToggle').getAttribute('aria-pressed')!=='true'||!('speechSynthesis'in window)||performance.now()-lastSpoken<700)return;
-  lastSpoken=performance.now();speechSynthesis.cancel();
-  const utterance=new SpeechSynthesisUtterance(message);utterance.lang='en-IN';utterance.rate=1.04;utterance.volume=.65;
-  speechSynthesis.speak(utterance);
-}
+const jarvisSession=new JarvisSession();
+function speak(message){queueMicrotask(()=>sayText(message));}
 function stopInputs(message='Inputs stopped. Autopilot is ready.'){
-  camera.stop();voice.stop();if('speechSynthesis'in window)speechSynthesis.cancel();status(message);
+  camera.stop();voice.stop();jarvisSession.reset();cancelSpeech();document.dispatchEvent(new CustomEvent('portfolio:inputs-stopped'));status(message);
 }
-function executeCommand(text,{spoken=false}={}){
-  const command=parseCommand(text,{requireWakeWord:spoken,projects:window.PORTFOLIO.projects,projectIds:window.PORTFOLIO_SPOTLIGHT});
+function executeCommand(text,{spoken=false,resolved=null}={}){
+  const command=resolved||parseCommand(text,{requireWakeWord:spoken,projects:window.PORTFOLIO.projects,projectIds:window.PORTFOLIO_SPOTLIGHT,context:root.classList.contains('tour-mode')?'tour':'deck'});
   if(!command){
-    if(!spoken||/\bjarvis\b/i.test(text))status('Try “open LEXA”, “all projects”, “change color”, or “help”. You can also search projects with /.');
+    if(!spoken||/\bjarvis\b/i.test(text))status('Try “open LEXA”, “show AI projects”, “start tour”, or “help”. Press / to find a project.');
     return false;
   }
+  if(['openProject','launchProject','sourceProject'].includes(command.type)&&!window.PORTFOLIO.projects.some(p=>p.id===command.id))return false;
   let reply='Done.';
   switch(command.type){
-    case 'openProject':{document.dispatchEvent(new CustomEvent('portfolio:project',{detail:{id:command.id}}));const project=window.PORTFOLIO.projects.find(p=>p.id===command.id);status(`Opening ${project?.name||'project'}.`);reply=`Opening ${project?.name||'project'}.`;break;}
+    case 'openProject':{document.dispatchEvent(new CustomEvent('portfolio:project',{detail:{id:command.id}}));const project=window.PORTFOLIO.projects.find(p=>p.id===command.id);status(`Opening ${project?.name||'project'}.`);reply=project?`${project.name}. ${project.stage}. ${project.description}`:'Opening the project.';break;}
     case 'launchProject':case 'sourceProject':{document.dispatchEvent(new CustomEvent('portfolio:destination',{detail:{id:command.id,kind:command.type==='sourceProject'?'source':'demo'}}));reply='Opening the project.';break;}
+    case 'tour':document.querySelector('#jarvisDialog[open]')?.close();document.dispatchEvent(new CustomEvent('portfolio:deck',{detail:{action:'activate'}}));document.dispatchEvent(new CustomEvent('portfolio:tour',{detail:{action:command.action,value:command.value}}));reply=({start:'Starting the guided build tour.',pause:'Tour paused. Take your time.',resume:'Continuing the tour.',stop:'Tour closed. The constellation is yours.',next:'Next chapter.',previous:'Previous chapter.',restart:'Starting the tour again.',speed:'Tour pace updated.'})[command.action]||'Tour updated.';break;
+    case 'library':case 'search':document.dispatchEvent(new CustomEvent('portfolio:library',{detail:command.type==='search'?{query:command.query,filter:'all',sort:'featured'}:{filter:command.filter,sort:command.sort,query:''}}));reply=command.type==='search'?`Searching projects for ${command.query}.`:`Here are the ${command.filter==='all'?'latest':command.filter} projects.`;break;
+    case 'assistant':document.dispatchEvent(new CustomEvent('portfolio:jarvis'));reply='Ask me to open a project, start a tour, or change the visuals.';break;
+    case 'sound':if(($('#soundToggle').getAttribute('aria-pressed')==='true')!==command.enabled)$('#soundToggle').click();reply=command.enabled?'Interface sound enabled.':'Sound muted.';break;
     case 'deck':document.dispatchEvent(new CustomEvent('portfolio:deck',{detail:{action:command.action}}));reply='Interface updated.';break;
     case 'scroll':{const scroller=document.querySelector('dialog[open]')||(root.classList.contains('deck-mode')?document.querySelector('#deckMap'):document.scrollingElement);scroller?.scrollBy({top:command.direction*innerHeight*.55,behavior:paused?'instant':'smooth'});reply='Scrolling.';break;}
     case 'scene':setScene(command.scene,{source:spoken?'voice':'manual'});reply=`${command.scene} engaged.`;break;
     case 'next':nextScene(1,spoken?'voice':'manual');reply=`${scene} engaged.`;break;
     case 'previous':nextScene(-1,spoken?'voice':'manual');reply=`${scene} engaged.`;break;
-    case 'palette':$('#paletteToggle').click();reply='Color updated.';status('A fresh spectrum. Keep exploring.');break;
+    case 'palette':if(command.value)document.dispatchEvent(new CustomEvent('portfolio:palette',{detail:{value:command.value}}));else $('#paletteToggle').click();reply='Color updated.';status('A fresh spectrum. Keep exploring.');break;
     case 'burst':burst(spoken?'voice':'manual');reply='Signal sent.';break;
     case 'pause':if(!root.classList.contains('motion-paused'))$('#motionToggle').click();status('Animations paused. Say “Jarvis, resume” when you’re ready.');reply='Animations paused.';break;
     case 'resume':if(root.classList.contains('motion-paused'))$('#motionToggle').click();status('Motion restored. The universe is yours.');reply='Motion restored.';break;
-    case 'autopilot':setAuto(command.enabled);reply=command.enabled?'Autopilot engaged.':'You have control.';break;
+    case 'autopilot':if(root.classList.contains('deck-mode'))document.dispatchEvent(new CustomEvent('portfolio:tour',{detail:{action:command.enabled?'start':'stop'}}));else setAuto(command.enabled);reply=command.enabled?'Guided tour engaged.':'Auto tour off.';break;
     case 'navigate':{
       if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
       if(expanded)exitExpanded();
@@ -151,28 +160,39 @@ function executeCommand(text,{spoken=false}={}){
       target?.scrollIntoView({behavior:paused?'instant':'smooth'});status(`Showing ${command.target==='work'?'projects':command.target}.`);reply='On your screen.';break;
     }
     case 'cameraOff':camera.stop();reply='Camera off.';status('Camera stopped. Mouse and voice control are ready.');break;
-    case 'voiceOff':voice.stop();status('Voice stopped. You can keep typing commands.');return true;
-    case 'stopInputs':stopInputs();return true;
-    case 'help':if(root.classList.contains('deck-mode')){document.dispatchEvent(new CustomEvent('portfolio:deck',{detail:{action:'help'}}));reply='Controls open.';break;}if(expanded)exitExpanded();if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});$('#controlGuide').open=true;$('#controlGuide').scrollIntoView({block:'nearest',behavior:paused?'instant':'smooth'});status('The control guide is open just below the interface.');reply='Control guide open.';break;
+    case 'voiceOff':voice.stop();jarvisSession.reset();cancelSpeech();status('Voice stopped. You can keep typing commands.');reply='Microphone off.';break;
+    case 'stopInputs':stopInputs();reply='Camera and microphone are off.';break;
+    case 'help':document.dispatchEvent(new CustomEvent('portfolio:jarvis',{detail:{help:true}}));reply='I can open any public project, search your builds, guide a tour, change colors, or pause the visuals. Try one of the command buttons.';break;
   }
-  if(spoken){inputAt=performance.now();inputSource='VOICE';speak(reply);}
+  document.dispatchEvent(new CustomEvent('portfolio:command-result',{detail:{reply,text,type:command.type,spoken}}));
+  if(spoken){inputAt=performance.now();inputSource='VOICE';if(!['stopInputs','voiceOff','sound'].includes(command.type)&&!(command.type==='tour'&&$('#tourNarration').checked))speak(reply);}
   return true;
 }
 const voice=new VoiceControl({
   onState(snapshot){
     voiceState=snapshot.state;
-    const engaged=['listening','starting'].includes(snapshot.state);
+    const engaged=snapshot.wanted===true;
     $('#voiceToggle').setAttribute('aria-pressed',String(engaged));
-    $('#voiceToggle span').textContent=engaged?'Stop voice':'Enable voice';
+    $('#voiceToggle span').textContent=engaged?'Stop Jarvis':'Talk to Jarvis';
     $('#voiceToggle').classList.toggle('loading',snapshot.state==='starting');
     $('#voiceIndicator').classList.toggle('active',engaged);
-    $('#voiceIndicator').innerHTML=`<i></i> ${snapshot.state==='listening'?'LISTENING':snapshot.state==='starting'?'MIC STARTING':'VOICE OFF'}`;
+    $('#voiceIndicator').innerHTML=`<i></i> ${snapshot.state==='listening'?'LISTENING':snapshot.state==='starting'?'MIC STARTING':snapshot.state==='speaking'?'MIC PAUSED':'VOICE OFF'}`;
     $('#voiceStatus').textContent=snapshot.message;
     if(['error','unsupported'].includes(snapshot.state))status(snapshot.message);
     updateBeacon();
+    document.dispatchEvent(new CustomEvent('portfolio:voice-state',{detail:snapshot}));
   },
-  onTranscript:transcript=>executeCommand(transcript,{spoken:true})
+  onHeard:heard=>document.dispatchEvent(new CustomEvent('portfolio:voice-heard',{detail:heard})),
+  onTranscript:(transcript,metadata)=>{
+    const outcome=jarvisSession.receive(transcript,{mode:voice.mode,alternatives:metadata?.alternatives||[],projects:window.PORTFOLIO.projects,projectIds:window.PORTFOLIO_SPOTLIGHT,context:root.classList.contains('tour-mode')?'tour':'deck'});
+    if(outcome.kind==='command')queueMicrotask(()=>executeCommand(outcome.text,{spoken:true,resolved:outcome.command}));
+    else if(outcome.kind==='wake')document.dispatchEvent(new CustomEvent('portfolio:jarvis-message',{detail:{text:'I’m here. Tell me what to open.',kind:'ready'}}));
+    else if(outcome.kind==='unknown')document.dispatchEvent(new CustomEvent('portfolio:jarvis-message',{detail:{text:'I didn’t match that command. Try “open LEXA” or “start tour”.',kind:'hint'}}));
+    return {keepListening:outcome.kind==='wake'};
+  }
 });
+setSpeechHooks({before:()=>voice.suspend(),after:token=>{if(token!==null)setTimeout(()=>{if(!isSpeaking()&&voice.resume(token))jarvisSession.armedUntil=Date.now()+10000;},200);}});
+document.addEventListener('portfolio:voice-control',event=>{const {action,mode,language,value}=event.detail||{};if(action==='stop'){voice.stop();jarvisSession.reset();cancelSpeech();}else if(action==='listen'){cancelSpeech();voice.stop();jarvisSession.reset();voice.start({mode:mode==='handsfree'?'handsfree':'once',language:language||'en-IN'});}else if(action==='replies'){enableReplies(value);document.dispatchEvent(new CustomEvent('portfolio:reply-mode',{detail:{enabled:value===true}}));}});
 document.addEventListener('portfolio:execute',event=>{if(typeof event.detail?.text!=='string'||!executeCommand(event.detail.text))event.preventDefault();});
 document.addEventListener('portfolio:exitStudio',()=>{if(expanded)exitExpanded();if(document.fullscreenElement===studio)document.exitFullscreen().catch(()=>{});});
 $('#cameraToggle').addEventListener('click',()=>{
@@ -181,9 +201,10 @@ $('#cameraToggle').addEventListener('click',()=>{
   else if(!handGraphicsAvailable()){const message='Hand tracking graphics are unavailable in this browser. Mouse, touch, and voice still work.';$('#cameraStatus').textContent=message;status(message);}
   else camera.start();
 });
-$('#voiceToggle').addEventListener('click',()=>voice.wanted?voice.stop():voice.start());
+$('#voiceToggle').addEventListener('click',()=>{if(voice.wanted){voice.stop();jarvisSession.reset();cancelSpeech();}else document.dispatchEvent(new CustomEvent('portfolio:jarvis',{detail:{listen:true}}));});
 $('#stopAllInputs').addEventListener('click',()=>stopInputs());
-$('#soundToggle').addEventListener('click',()=>{if('speechSynthesis'in window)speechSynthesis.cancel();});
+$('#soundToggle').addEventListener('click',()=>cancelSpeech());
+new MutationObserver(()=>{const enabled=$('#soundToggle').getAttribute('aria-pressed')==='true';if(!enabled){enableReplies(false);document.dispatchEvent(new CustomEvent('portfolio:reply-mode',{detail:{enabled:false}}));}if(!enabled)document.dispatchEvent(new CustomEvent('portfolio:mute-output'));}).observe($('#soundToggle'),{attributes:true,attributeFilter:['aria-pressed']});
 $('#visualCommandForm').addEventListener('submit',event=>{event.preventDefault();const field=$('#visualCommand');if(executeCommand(field.value))field.value='';});
 $$('[data-command]').forEach(button=>button.addEventListener('click',()=>executeCommand(button.dataset.command)));
 $$('.scene-button').forEach(button=>button.addEventListener('click',()=>setScene(button.dataset.scene)));
@@ -244,6 +265,7 @@ viewport.addEventListener('keydown',event=>{
 window.addEventListener('pointerup',()=>{pointer.down=false;});
 
 function resize(){
+  if(!canRenderStudio())return;
   const rect=viewport.getBoundingClientRect();width=Math.max(1,rect.width);height=Math.max(1,rect.height);dpr=Math.min(devicePixelRatio||1,1.5);
   canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx?.setTransform(dpr,0,0,dpr,0,0);
   ambientWidth=innerWidth;ambientHeight=innerHeight;ambient.width=Math.round(ambientWidth*dpr);ambient.height=Math.round(ambientHeight*dpr);ambientCtx?.setTransform(dpr,0,0,dpr,0,0);
@@ -256,14 +278,14 @@ function ring(cx,cy,r,flatten,angle,color,alpha=1){
   ctx.beginPath();ctx.ellipse(0,0,r,r*flatten,0,0,Math.PI*2);ctx.stroke();ctx.restore();
 }
 function draw(){
-  if(!ctx||!width)return;
+  if(!ctx||!width||!visible||!canRenderStudio())return;
   const hand=activeHand(),now=performance.now(),pointerActive=now-pointer.activeAt<3000;
   const target=hand|| (pointerActive?pointer:{x:.5+Math.sin(clock*.2)*.16,y:.5+Math.cos(clock*.17)*.13,zoom:1});
   // Frame-rate-independent smoothing happens in the animation tick.
   if(paused){smooth.x=target.x;smooth.y=target.y;smooth.zoom=target.zoom||1;}
   const cx=width*(.5+(smooth.x-.5)*.13),cy=height*(.5+(smooth.y-.5)*.12);
   const radius=Math.min(width*.31,height*.38)*smooth.zoom;
-  const morph=ease((clock-morphStart)/3),points=shapes[scene],previous=shapes[previousScene];
+  const morph=ease((clock-morphStart)/3),points=shapeFor(scene),previous=shapeFor(previousScene);
   const frozen=hand&&stablePose==='fist';
   const rotation=clock*.1+(smooth.x-.5)*.45;
   const cos=Math.cos(rotation),sin=Math.sin(rotation),tilt=.13+(smooth.y-.5)*.5;
@@ -326,7 +348,7 @@ function draw(){
   if(frozen)canvas.dataset.flow='held';else canvas.dataset.flow=paused?'paused':'running';
 }
 function drawAmbient(){
-  if(!ambientCtx)return;
+  if(!ambientCtx||!canRenderStudio())return;
   const c=ambientCtx;c.clearRect(0,0,ambientWidth,ambientHeight);
   const total=compact?28:56;
   for(let i=0;i<total;i++){
@@ -339,8 +361,8 @@ function drawAmbient(){
 }
 function frame(now){
   frameID=0;
-  if(document.hidden||paused){lastFrame=0;return;}
-  if(!lastFrame||now-lastFrame>=1000/30){
+  if(!canRenderStudio()||paused){lastFrame=0;return;}
+  if(studioPacer.due(now)){
     const dt=lastFrame?Math.min((now-lastFrame)/1000,.07):.033;lastFrame=now;
     const hand=activeHand(),held=hand&&stablePose==='fist';
     clock+=held?0:dt;
@@ -353,12 +375,14 @@ function frame(now){
   }
   schedule();
 }
-function schedule(){if(!frameID&&!paused&&!document.hidden)frameID=requestAnimationFrame(frame);}
+function schedule(){if(!frameID&&!paused&&canRenderStudio())frameID=requestAnimationFrame(frame);}
 new MutationObserver(()=>{
   readPalette();const next=root.classList.contains('motion-paused');paused=next;
   $('#studioPause').textContent=paused?'Resume':'Pause';$('#studioPause').setAttribute('aria-pressed',String(paused));
   lastFrame=0;draw();drawAmbient();schedule();
 }).observe(root,{attributes:true,attributeFilter:['class','data-palette']});
+document.addEventListener('portfolio:mode',()=>{lastFrame=0;studioPacer.reset();resize();schedule();});
+document.addEventListener('portfolio:render-state',()=>{if(!canRenderStudio()){if(frameID)cancelAnimationFrame(frameID);frameID=0;lastFrame=0;}else{resize();schedule();}});
 if('IntersectionObserver'in window)new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible)draw();},{rootMargin:'100px'}).observe(studio);
 if('ResizeObserver'in window)new ResizeObserver(resize).observe(viewport);else window.addEventListener('resize',resize,{passive:true});
 window.addEventListener('resize',()=>{ambientWidth=innerWidth;ambientHeight=innerHeight;resize();},{passive:true});

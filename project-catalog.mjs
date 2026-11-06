@@ -1,4 +1,4 @@
-import {mergeCatalog,fetchRepositoryPages,validCatalogCache} from './catalog-core.mjs?v=20261106-ux2';
+import {mergeCatalog,fetchRepositoryPages,validCatalogCache} from './catalog-core.mjs?v=20261107-orbit';
 
 const portfolio=window.PORTFOLIO,curated=portfolio.projects.map(p=>({...p}));
 const snapshot=window.PORTFOLIO_REPOS||{repos:[],checkedAt:portfolio.checkedAt,publicRepos:portfolio.publicRepos};

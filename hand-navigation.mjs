@@ -1,4 +1,4 @@
-import {mapHandPointer,PinchSelector} from './deck-core.mjs?v=20261106-ux2';
+import {mapHandPointer,PinchSelector} from './deck-core.mjs?v=20261107-orbit';
 
 /* Hand events come from the existing opt-in tracker. This controls only marked,
    visible portfolio actions. It never moves the OS cursor or synthesizes keys. */
@@ -22,7 +22,7 @@ export function startHandNavigation({onActivate,onHover=()=>{}}){
   function candidateAt(x,y){
     const dialog=document.querySelector('dialog[open]');
     const scope=dialog||document;
-    const visible=element=>!element.disabled&&element.getAttribute('aria-disabled')!=='true'&&element.getClientRects().length>0;
+    const visible=element=>!element.disabled&&element.getAttribute('aria-disabled')!=='true'&&!element.closest('[inert]')&&element.getClientRects().length>0&&getComputedStyle(element).visibility!=='hidden';
     const direct=document.elementsFromPoint(x,y).map(node=>node.closest?.('[data-hand-action]')).find(node=>node&&scope.contains(node)&&visible(node));
     if(direct)return direct;
     let nearest=null,best=19;

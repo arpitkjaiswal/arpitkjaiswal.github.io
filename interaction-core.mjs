@@ -1,4 +1,4 @@
-import {projectCommand} from './deck-core.mjs?v=20261106-ux2';
+import {projectCommand} from './deck-core.mjs?v=20261107-orbit';
 /* Pure input interpretation. These functions never access a camera or microphone. */
 export const SCENES = Object.freeze(['reactor', 'galaxy', 'vortex', 'aurora']);
 export const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
@@ -54,12 +54,46 @@ export class PoseLatch {
   }
 }
 
-export function parseCommand(transcript, {requireWakeWord = true,projects=null,projectIds} = {}) {
+export function normalizeCommand(transcript){return typeof transcript==='string'?transcript.toLowerCase().replace(/[’']/g,'').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim():'';}
+export function splitWakeWord(text){const wake=/^(?:(?:hey|hi|hello|okay|ok) )?(?:jarvis|jervis|jar vice)\b\s*/;return {hasWake:wake.test(text),text:text.replace(wake,'').trim()};}
+export function parseCommand(transcript, {requireWakeWord = true,projects=null,projectIds,context='deck'} = {}) {
   if (typeof transcript !== 'string' || transcript.length > 180) return null;
-  let text = transcript.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g,' ').trim();
-  const wake = /^(?:hey |okay |ok )?jarvis\b\s*/;
-  if (requireWakeWord && !wake.test(text)) return null;
-  text = text.replace(wake, '').replace(/^please /,'').replace(/ please$/,'').trim();
+  const wake=splitWakeWord(normalizeCommand(transcript));
+  if(requireWakeWord&&!wake.hasWake)return null;
+  let text=wake.text.replace(/^(?:can|could|would|will) you /,'').replace(/^i want to /,'').replace(/^please /,'').replace(/(?: for me| please)$/,'').trim();
+  const tour={
+    'start tour':'start','start the tour':'start','play tour':'start','start auto tour':'start','start the auto tour':'start','give me a tour':'start','show me around':'start','guided tour':'start',
+    'pause tour':'pause','pause the tour':'pause','resume tour':'resume','continue tour':'resume','resume the tour':'resume',
+    'stop tour':'stop','end tour':'stop','exit tour':'stop','stop the tour':'stop',
+    'next chapter':'next','next stop':'next','previous chapter':'previous','previous stop':'previous','restart tour':'restart'
+  };
+  if(tour[text])return {type:'tour',action:tour[text]};
+  if(context==='tour'){
+    if(['next','next project','next build'].includes(text))return {type:'tour',action:'next'};
+    if(['previous','previous project','go back'].includes(text))return {type:'tour',action:'previous'};
+    if(['pause','freeze'].includes(text))return {type:'tour',action:'pause'};
+    if(['resume','continue'].includes(text))return {type:'tour',action:'resume'};
+    if(['faster','speed up'].includes(text))return {type:'tour',action:'speed',value:'quick'};
+    if(['slower','slow down'].includes(text))return {type:'tour',action:'speed',value:'relaxed'};
+  }
+  const category=text.match(/^(?:show|show me|browse|find|open) (?:the )?(ai|ai and data|systems|web|games|play|featured|latest)(?: projects| builds| repos| repositories)?$/);
+  if(category)return {type:'library',filter:({games:'play',latest:'all','ai and data':'ai'}[category[1]]||category[1]),sort:category[1]==='latest'?'recent':'featured'};
+  const search=text.match(/^(?:search for|search projects for|find projects about) (.{1,100})$/);
+  if(search)return {type:'search',query:search[1]};
+  const color=text.match(/^(?:set (?:the )?colou?r to|make it|switch to) (blue|ice|green|lime|coral|orange)$/);
+  if(color)return {type:'palette',value:({blue:'ice',green:'lime',orange:'coral'}[color[1]]||color[1])};
+  const natural={
+    'who is arpit':{type:'navigate',target:'about'},'tell me about arpit':{type:'navigate',target:'about'},'about arpit':{type:'navigate',target:'about'},
+    'what can you do':{type:'help'},'help me':{type:'help'},'open jarvis':{type:'assistant'},
+    'sound on':{type:'sound',enabled:true},'enable sound':{type:'sound',enabled:true},'sound off':{type:'sound',enabled:false},'mute':{type:'sound',enabled:false},
+    'stop':{type:'stopInputs'},'microphone off':{type:'voiceOff'},'next':{type:'deck',action:'next'},'next build':{type:'deck',action:'next'},
+    'previous':{type:'deck',action:'previous'},'go back':{type:'deck',action:'back'},'close this':{type:'deck',action:'back'},'open this':{type:'deck',action:'open'},'open current project':{type:'deck',action:'open'},
+    'go to projects':{type:'deck',action:'library'},'go to my projects':{type:'deck',action:'library'},'go to contact':{type:'navigate',target:'contact'},'go to about':{type:'navigate',target:'about'}
+  };
+  if(natural[text])return {...natural[text]};
+  text=text.replace(/^take me to /,'go to ').replace(/^navigate to /,'go to ').replace(/^show me /,'show ').replace(/^bring up /,'open ').replace(/^what is /,'tell me about ').replace(/^whats /,'tell me about ');
+  if(natural[text])return {...natural[text]};
+  text=text.replace(/^(open|show|inspect) (?:the )?(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth) (?:project|build)$/,(_,verb,n)=>`${verb} project ${({first:'one',second:'two',third:'three',fourth:'four',fifth:'five',sixth:'six',seventh:'seven',eighth:'eight',ninth:'nine'})[n]}`).replace(/\bproject number /,'project ');
   const project=projectCommand(text,{projects,...(projectIds?{projectIds}:{})});if(project)return project;
   if (SCENES.includes(text)) return {type:'scene',scene:text};
   const scene = text.match(/^(?:show|switch to|activate|engage)(?: the)? (reactor|galaxy|vortex|aurora)(?: mode)?$/);

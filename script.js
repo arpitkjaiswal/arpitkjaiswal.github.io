@@ -120,6 +120,7 @@
   reducedMotion.addEventListener?.('change', event => {
     if (event.matches) { motionPaused = true; syncMotion(); redraw(); }
   });
+  document.addEventListener('portfolio:palette',event=>{const value=event.detail?.value;if(!['lime','coral','ice'].includes(value))return;palette=value;root.dataset.palette=palette;storage.set('arpit.palette',palette);readTheme();redraw();});
   $('#paletteToggle').addEventListener('click', () => {
     palette = ['lime','coral','ice'][(['lime','coral','ice'].indexOf(palette) + 1) % 3];
     root.dataset.palette = palette;
@@ -153,8 +154,10 @@
 
   // Curated projects have real repository destinations and explicit stages.
   const grid = $('#projectGrid');
+  let galleryDirty=true;
+  const classicRoute=()=>Boolean(location.hash&&location.hash!=='#deck');
   function renderGallery(){
-  grid.replaceChildren();
+  if(!galleryDirty)return;galleryDirty=false;const fragment=document.createDocumentFragment();
   projects.forEach((project, index) => {
     const card = document.createElement('article');
     card.className = `project-card${project.compact ? ' compact' : ''}`;
@@ -167,12 +170,14 @@
     } else {
       card.innerHTML = `<a class="project-art" href="${repoURL(project)}" target="_blank" rel="noopener noreferrer" aria-label="Explore ${escapeHTML(project.name)} source code on GitHub"><span class="project-number">0${index + 1} /</span><span class="project-stage">${escapeHTML(project.stage)}</span><img src="${project.art}" width="720" height="440" loading="lazy" decoding="async" alt="Illustrative artwork for ${escapeHTML(project.name)}"><span class="project-art-label">${escapeHTML(project.category.toUpperCase())}</span><span class="project-open">${icon('arrow')}</span></a><div class="project-info"><div class="project-title-row"><h3><a href="${repoURL(project)}" target="_blank" rel="noopener noreferrer">${escapeHTML(project.name)}</a></h3><span class="project-category">${escapeHTML(project.category)}</span></div><p class="project-description">${escapeHTML(project.description)}</p><div class="project-tags">${tags}${details}</div></div>`;
     }
-    grid.appendChild(card);
+    fragment.appendChild(card);
   });
+  grid.replaceChildren(fragment);
   }
-  renderGallery();
   let activeFilter = 'all';
   function filterProjects() {
+    if(!classicRoute()&&!grid.children.length)return;
+    renderGallery();
     const query = $('#projectSearch').value.toLowerCase().trim();
     let count = 0;
     projects.forEach(project => {
@@ -193,7 +198,9 @@
   $('#projectSearch').addEventListener('input', filterProjects);
   $('#clearFilters').addEventListener('click', () => { $('#projectSearch').value = ''; $('[data-filter="all"]').click(); $('#projectSearch').focus(); });
   filterProjects();
-  document.addEventListener('portfolio:catalog',()=>{renderGallery();filterProjects();if(commandDialog.open)renderCommands();});
+  window.addEventListener('hashchange',()=>{if(classicRoute())filterProjects();});
+  document.addEventListener('portfolio:mode',event=>{if(!event.detail?.deck)filterProjects();});
+  document.addEventListener('portfolio:catalog',()=>{galleryDirty=true;if(classicRoute())filterProjects();if(commandDialog.open)renderCommands();});
 
   const projectDialog = $('#projectDialog');
   function openProject(id) {
@@ -469,16 +476,19 @@
     }
     ctx.globalAlpha=1;
   }
-  function redraw(){drawHero();drawWave();}
+  const canDrawClassic=()=>!root.classList.contains('deck-mode')&&!root.classList.contains('modal-visible')&&!document.hidden&&Boolean(location.hash&&location.hash!=='#deck');
+  function redraw(){if(!canDrawClassic())return;if(heroVisible)drawHero();if(waveVisible)drawWave();}
   function frame(time){
     frameID=0;
-    if(document.hidden||motionPaused||(!heroVisible&&!waveVisible)){lastFrame=0;return;}
+    if(!canDrawClassic()||motionPaused||(!heroVisible&&!waveVisible)){lastFrame=0;return;}
     if(!lastFrame||time-lastFrame>=1000/30){engineTime+=lastFrame?Math.min((time-lastFrame)/1000,.08):.033;lastFrame=time;if(heroVisible)drawHero();if(waveVisible)drawWave();}
     frameID=requestAnimationFrame(frame);
   }
-  function scheduleFrame(){if(!frameID&&!motionPaused&&!document.hidden&&(heroVisible||waveVisible))frameID=requestAnimationFrame(frame);}
+  function scheduleFrame(){if(!frameID&&!motionPaused&&canDrawClassic()&&(heroVisible||waveVisible))frameID=requestAnimationFrame(frame);}
   if('ResizeObserver'in window){const resizeObserver=new ResizeObserver(resizeCanvases);resizeObserver.observe($('#heroArt'));resizeObserver.observe($('.wave-display'));}else window.addEventListener('resize',resizeCanvases,{passive:true});
   if('IntersectionObserver'in window){const canvasObserver=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.target.id==='heroArt')heroVisible=entry.isIntersecting;else waveVisible=entry.isIntersecting;});scheduleFrame();},{rootMargin:'120px'});canvasObserver.observe($('#heroArt'));canvasObserver.observe($('.wave-display'));}
+  document.addEventListener('portfolio:mode',()=>{lastFrame=0;resizeCanvases();scheduleFrame();});
+  document.addEventListener('portfolio:render-state',()=>{if(!canDrawClassic()){if(frameID)cancelAnimationFrame(frameID);frameID=0;lastFrame=0;}else{redraw();scheduleFrame();}});
   resizeCanvases();scheduleFrame();
   $('#remixOrb').addEventListener('click',()=>{remix++;burstAt=engineTime;redraw();audio.tone(392,.6,.1);audio.tone(587.33,.7,.05,.07);scheduleFrame();});
   const frequencies=[261.63,293.66,329.63,392,440];
