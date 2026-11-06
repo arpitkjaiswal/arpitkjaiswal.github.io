@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="440" viewBox="0 0 720 440"><defs><radialGradient id="vaultglow"><stop stop-color="#75dce5" stop-opacity=".1"/><stop offset="1" stop-color="#75dce5" stop-opacity="0"/></radialGradient><linearGradient id="vaulttop" x2="1" y2="1"><stop stop-color="#387681"/><stop offset="1" stop-color="#1e4957"/></linearGradient><pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0v32" fill="none" stroke="#fff" stroke-opacity=".035"/></pattern></defs><rect width="720" height="440" fill="#12252e"/><rect width="720" height="440" fill="url(#grid)"/><circle cx="346" cy="217" r="155" fill="url(#vaultglow)"/>
+<ellipse cx="352" cy="347" rx="152" ry="24" fill="#000" opacity=".14"/>
+<path d="m230 274 123-66 128 66-124 71Z" fill="#153d46" stroke="#75dce5" stroke-opacity=".2"/>
+<path d="m230 274 127 71v18l-127-71Z" fill="#11323a"/><path d="m357 345 124-71v18l-124 71Z" fill="#1b4853"/>
+<path d="m230 230 123-66 128 66-124 71Z" fill="#1c525c" fill-opacity=".65" stroke="#75dce5" stroke-opacity=".4"/>
+<path d="m230 230 127 71v14l-127-71Z" fill="#163c44"/><path d="m357 301 124-71v14l-124 71Z" fill="#245d68"/>
+<path d="m230 185 123-67 128 67-124 71Z" fill="url(#vaulttop)" stroke="#a1eef0" stroke-opacity=".6"/>
+<path d="m230 185 127 71v14l-127-71Z" fill="#24515a"/><path d="m357 256 124-71v14l-124 71Z" fill="#377783"/>
+<path d="m353 154-26 13v18l29 17 29-17v-18Z" fill="#102b35" stroke="#b7f2f0" stroke-width="1.2"/>
+<path d="M342 166v-9c0-18 25-18 25-4v10" fill="none" stroke="#b7f2f0" stroke-width="3"/>
+<circle cx="355" cy="181" r="3" fill="#a2eee8"/>
+<path d="M230 185h-63v56m314-11h57v-75" fill="none" stroke="#75dce5" stroke-opacity=".3" stroke-dasharray="3 4"/>
+<circle cx="167" cy="247" r="5" fill="#d4ff63"/><circle cx="538" cy="148" r="5" fill="#75dce5"/>
+<rect x="100" y="263" width="134" height="30" rx="4" fill="#153640" stroke="#75dce5" stroke-opacity=".25"/>
+<rect x="478" y="99" width="133" height="29" rx="4" fill="#153640" stroke="#75dce5" stroke-opacity=".25"/>
+<path d="M442 342h30m8 0h30m8 0h30" stroke="#75dce5" stroke-opacity=".35"/>
+<circle cx="439" cy="342" r="3" fill="#75dce5"/><circle cx="477" cy="342" r="3" fill="#75dce5"/><circle cx="515" cy="342" r="3" fill="#75dce5"/><circle cx="553" cy="342" r="3" fill="#75dce5"/>
+<text x="114" y="282" fill="#c4ecc7" font-family="monospace" font-size="8" letter-spacing="1.5">POLICY / ALLOW</text><text x="491" y="118" fill="#a1e2e4" font-family="monospace" font-size="8" letter-spacing="1.5">ENCRYPTED</text><text x="278" y="391" fill="#8ac1c480" font-family="monospace" font-size="9" letter-spacing="1.5">TRUST IS A DESIGN DECISION.</text><text x="450" y="365" fill="#75dce580" font-family="monospace" font-size="7" letter-spacing="1.5">AUDIT CHAIN</text></svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="440" viewBox="0 0 720 440"><defs><pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0v32" fill="none" stroke="#fff" stroke-opacity=".035"/></pattern></defs><rect width="720" height="440" fill="#2b211b"/><rect width="720" height="440" fill="url(#grid)"/><circle cx="556" cy="261" r="140" fill="#ffae7b" opacity=".025"/>
+<rect x="115" y="102" width="490" height="250" rx="12" fill="#2b241f" stroke="#d8aa89" stroke-opacity=".25"/>
+<path d="M115 141h490M259 141v211" stroke="#d8aa89" stroke-opacity=".15"/>
+<circle cx="135" cy="122" r="3" fill="#d19578"/><circle cx="148" cy="122" r="3" fill="#d4b78a"/><circle cx="161" cy="122" r="3" fill="#b6c890"/>
+<rect x="132" y="158" width="109" height="43" rx="5" fill="#ffae7b" fill-opacity=".1"/>
+<circle cx="148" cy="179" r="7" fill="#ffae7b" fill-opacity=".4"/><path d="M164 176h59m-59 8h40" stroke="#dfb396" stroke-opacity=".5" stroke-width="3" stroke-linecap="round"/>
+<circle cx="148" cy="224" r="7" fill="#dfb396" fill-opacity=".15"/><path d="M164 221h59m-59 8h40" stroke="#dfb396" stroke-opacity=".2" stroke-width="3" stroke-linecap="round"/>
+<circle cx="148" cy="267" r="7" fill="#dfb396" fill-opacity=".15"/><path d="M164 264h59m-59 8h40" stroke="#dfb396" stroke-opacity=".2" stroke-width="3" stroke-linecap="round"/>
+<rect x="281" y="160" width="302" height="46" rx="5" fill="#231d19"/>
+<path d="M296 180h105m-105 10h63" stroke="#e7b58d" stroke-opacity=".38" stroke-width="4" stroke-linecap="round"/>
+<rect x="488" y="174" width="77" height="19" rx="4" fill="#d4ff63" fill-opacity=".16"/>
+<rect x="283" y="230" width="79" height="66" rx="6" fill="#ffae7b" fill-opacity=".08" stroke="#ffae7b" stroke-opacity=".2"/>
+<rect x="392" y="230" width="79" height="66" rx="6" fill="#ffae7b" fill-opacity=".08" stroke="#ffae7b" stroke-opacity=".2"/>
+<rect x="501" y="230" width="79" height="66" rx="6" fill="#ffae7b" fill-opacity=".08" stroke="#ffae7b" stroke-opacity=".2"/>
+<path d="M362 263h30m79 0h30" stroke="#e9ae7f" stroke-opacity=".45" stroke-dasharray="2 3"/>
+<path d="m309 259 8 8 15-15m88 7 8 8 15-15m88 7 8 8 15-15" stroke="#efbb96" stroke-width="2" fill="none" stroke-linecap="round"/>
+<rect x="335" y="319" width="191" height="4" rx="2" fill="#d4b192" opacity=".16"/>
+<text x="302" y="286" fill="#c7ab93" font-family="monospace" font-size="7" letter-spacing="1.5">RESUME</text><text x="406" y="286" fill="#c7ab93" font-family="monospace" font-size="7" letter-spacing="1.5">EVIDENCE</text><text x="516" y="286" fill="#c7ab93" font-family="monospace" font-size="7" letter-spacing="1.5">REVIEW</text><text x="496" y="187" fill="#d4ff63" font-family="monospace" font-size="7" letter-spacing="1.5">INSPECT</text><text x="285" y="123" fill="#c7ab93" font-family="monospace" font-size="8" letter-spacing="1.5">TALENTOS / CANDIDATE WORKSPACE</text><text x="207" y="390" fill="#d9b49a80" font-family="monospace" font-size="9" letter-spacing="1.5">EVIDENCE BEFORE ASSUMPTIONS.</text></svg>

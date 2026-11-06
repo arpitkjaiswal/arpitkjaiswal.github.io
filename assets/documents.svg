@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="440" viewBox="0 0 720 440"><defs><pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0v32" fill="none" stroke="#fff" stroke-opacity=".035"/></pattern></defs><rect width="720" height="440" fill="#2b1c29"/><rect width="720" height="440" fill="url(#grid)"/><rect x="156" y="100" width="228" height="252" rx="9" fill="#513144" stroke="#c990ac" stroke-opacity=".18" transform="rotate(-11 270 230)"/>
+<rect x="178" y="96" width="228" height="252" rx="9" fill="#58364a" stroke="#c990ac" stroke-opacity=".22" transform="rotate(-5 292 222)"/>
+<rect x="199" y="99" width="228" height="252" rx="9" fill="#e5c9d6"/>
+<path d="M223 127h80m-80 14h153" stroke="#714e64" stroke-width="5" stroke-linecap="round" opacity=".7"/>
+<path d="M224 172h173m-173 12h157m-157 12h166m-166 12h124" stroke="#977387" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+<rect x="218" y="228" width="183" height="41" rx="3" fill="#c59eb4"/>
+<path d="M225 242h163m-163 12h143" stroke="#6b485e" stroke-width="3" stroke-linecap="round" opacity=".6"/>
+<path d="M224 291h171m-171 12h153m-153 12h133" stroke="#977387" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+<path d="M401 249h35v-49h34" fill="none" stroke="#f59bc1" stroke-dasharray="3 4"/>
+<circle cx="401" cy="249" r="4" fill="#78435f"/>
+<rect x="438" y="155" width="182" height="147" rx="8" fill="#32212e" stroke="#e5b1cb" stroke-opacity=".35"/>
+<rect x="452" y="169" width="46" height="20" rx="4" fill="#f59bc1" fill-opacity=".15"/>
+<path d="M453 212h148m-148 11h139m-139 11h125m-125 11h143" stroke="#c69bb2" stroke-width="3" stroke-linecap="round" opacity=".4"/>
+<rect x="453" y="266" width="93" height="19" rx="4" fill="#f59bc1" fill-opacity=".1"/>
+<text x="458" y="183" fill="#f4c2dc" font-family="monospace" font-size="9" letter-spacing="1.5">[ 1 ]</text><text x="460" y="279" fill="#dbadc5" font-family="monospace" font-size="7" letter-spacing="1.5">VIEW SOURCE</text><text x="462" y="139" fill="#cc9bb680" font-family="monospace" font-size="8" letter-spacing="1.5">FOLLOW THE EVIDENCE</text><text x="206" y="391" fill="#d7a3bf80" font-family="monospace" font-size="9" letter-spacing="1.5">ANSWERS WITH A PAPER TRAIL.</text><text x="222" y="336" fill="#76566c" font-family="monospace" font-size="7" letter-spacing="1.5">SOURCE DOCUMENT</text></svg>

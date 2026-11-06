@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="440" viewBox="0 0 720 440"><defs><radialGradient id="glow"><stop stop-color="#bca4f7" stop-opacity=".25"/><stop offset="1" stop-color="#bca4f7" stop-opacity="0"/></radialGradient><linearGradient id="pet" x2="1" y2="1"><stop stop-color="#ddceff"/><stop offset="1" stop-color="#8264bd"/></linearGradient><pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0v32" fill="none" stroke="#fff" stroke-opacity=".035"/></pattern></defs><rect width="720" height="440" fill="#21192f"/><rect width="720" height="440" fill="url(#grid)"/><ellipse cx="360" cy="378" rx="174" ry="20" fill="#000" opacity=".25"/><path d="M110 354h500" stroke="#c5b6f4" stroke-opacity=".15"/>
+<rect x="150" y="103" width="420" height="255" rx="13" fill="#221c35" stroke="#ddcfff" stroke-opacity=".2"/>
+<path d="M150 136h420" stroke="#ddcfff" stroke-opacity=".12"/>
+<circle cx="168" cy="119" r="3" fill="#ee8e9f"/><circle cx="181" cy="119" r="3" fill="#edc983"/><circle cx="194" cy="119" r="3" fill="#a7cc95"/>
+<rect x="170" y="153" width="90" height="186" rx="5" fill="#171323"/>
+<rect x="181" y="169" width="62" height="6" rx="3" fill="#bca4f7" opacity=".4"/><rect x="181" y="185" width="44" height="4" rx="2" fill="#bca4f7" opacity=".14"/>
+<rect x="181" y="209" width="55" height="4" rx="2" fill="#bca4f7" opacity=".14"/><rect x="181" y="225" width="38" height="4" rx="2" fill="#bca4f7" opacity=".14"/>
+<rect x="282" y="273" width="202" height="37" rx="8" fill="#bca4f7" opacity=".08"/>
+<circle cx="382" cy="212" r="101" fill="url(#glow)"/>
+<path d="M330 191c0-34 25-57 56-57s56 23 56 57v38c0 21-16 38-38 38h-37c-21 0-37-17-37-38z" fill="url(#pet)" stroke="#ded1ff" stroke-opacity=".5"/>
+<path d="m340 158-8-21 29 10m51 0 27-10-7 24" fill="#bca4f7" stroke="#e5d9ff" stroke-opacity=".6"/>
+<rect x="345" y="187" width="82" height="48" rx="22" fill="#2b1f47"/>
+<ellipse cx="365" cy="207" rx="5" ry="7" fill="#e5d8ff"/><ellipse cx="407" cy="207" rx="5" ry="7" fill="#e5d8ff"/>
+<path d="M379 220q7 7 14 0" fill="none" stroke="#c5b3f3" stroke-width="2" stroke-linecap="round"/>
+<circle cx="350" cy="222" r="5" fill="#f49fc0" opacity=".45"/><circle cx="422" cy="222" r="5" fill="#f49fc0" opacity=".45"/>
+<path d="M314 291h9m4-8v16m5-21v26m6-18v10m6-24v38m6-28v18m6-12v7m6-23v37m6-29v19m6-15v10m6-24v36m6-27v19m6-11v6m6-21v34m6-28v22m6-15v6m6-15v23m6-14v4h12" fill="none" stroke="#bca4f7" stroke-width="2" stroke-linecap="round"/>
+<rect x="444" y="165" width="139" height="34" rx="17" fill="#d4ff63" transform="rotate(7 444 165)"/>
+<circle cx="461" cy="183" r="3" fill="#263817"/>
+<text x="472" y="187" fill="#273518" font-family="monospace" font-size="8" letter-spacing="1.5">HELLO, HUMAN.</text><text x="283" y="331" fill="#c5b6f4" font-family="monospace" font-size="8" letter-spacing="1.5">BUDDY / DESKTOP COMPANION</text><text x="168" y="89" fill="#b9a9df90" font-family="monospace" font-size="9" letter-spacing="1.5">VOICE. MEMORY. A LITTLE PERSONALITY.</text></svg>
