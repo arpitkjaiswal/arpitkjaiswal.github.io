@@ -23,8 +23,10 @@
   <link rel="stylesheet" href="style.css">
   <script src="projects.js" defer></script>
   <script src="script.js" defer></script>
+  <script type="module" src="visual-studio.mjs"></script>
 </head>
 <body>
+  <canvas class="ambient-canvas" id="ambientCanvas" aria-hidden="true"></canvas>
   <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 19 19 5M5 5h14v14"/></symbol>
     <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v16m-7-7 7 7 7-7"/></symbol>
@@ -34,6 +36,8 @@
     <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-4 1-4-2-6-2m12 5v-4c0-1-.2-2-1-2 4-.5 7-2 7-6a5 5 0 0 0-1-3c0-1 0-3-.5-3.5C18 3 16 4 15 4.5a14 14 0 0 0-6 0C8 4 6 3 4.5 3.5 4 4 4 6 4 7a5 5 0 0 0-1 3c0 4 3 5.5 7 6-1 .5-1 1-1 2v4"/></symbol>
     <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
     <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><rect x="3" y="7" width="14" height="12" rx="2"/><path d="m17 11 5-3v10l-5-3M7 7l2-3h5l2 3"/><circle cx="10" cy="13" r="3"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 11v2a7 7 0 0 0 14 0v-2m-7 9v3m-4 0h8"/></symbol>
     <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V3H3v13h5"/></symbol>
   </svg>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -65,13 +69,13 @@
         <p class="hero-description">I turn curious ideas into software you can actually use. A little AI, thoughtful systems, and a healthy amount of <span class="underlined">“what if?”</span></p>
         <p class="hero-role">Software developer <span>↗</span> B.Tech IT · MIT Manipal</p>
         <div class="hero-links"><a class="button button-primary" href="#work">Explore my work <svg class="icon"><use href="#i-down"/></svg></a><a class="text-link" href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener noreferrer">My GitHub <svg class="icon"><use href="#i-arrow"/></svg></a></div>
-        <div class="hero-footnote"><span class="tiny-cross">+</span> ALWAYS LEARNING. USUALLY BUILDING.</div>
+        <div class="hero-footnote"><a class="hero-live-link" href="#playground"><span class="status-dot"></span> ENTER THE LIVE INTERFACE <span>↗</span></a></div>
       </div>
       <div class="hero-art" id="heroArt">
         <div class="orb-grid" aria-hidden="true"></div>
         <div class="orb-halo" aria-hidden="true"></div>
         <canvas id="heroCanvas" aria-hidden="true"></canvas>
-        <span class="orb-label label-top" aria-hidden="true"><span class="mini-square"></span> THE CURIOSITY ENGINE</span>
+        <span class="orb-label label-top" aria-hidden="true"><span class="mini-square"></span> <span id="heroFormLabel">THE CURIOSITY ENGINE</span></span>
         <span class="floating-label label-python" aria-hidden="true"><b>Py</b><span>AI &amp; DATA</span></span>
         <span class="floating-label label-code" aria-hidden="true"><b>&lt;/&gt;</b><span>CREATIVE CODE</span></span>
         <span class="floating-label label-system" aria-hidden="true"><b>⌘</b><span>SYSTEMS</span></span>
@@ -115,7 +119,26 @@
     </section>
 
     <section class="play-section section-space" id="playground" aria-labelledby="playTitle">
-      <div class="wrap"><div class="play-heading reveal"><div><p class="eyebrow">03 / A SMALL DETOUR</p><h2 id="playTitle">Serious about code.<br><em>Playful by nature.</em></h2></div><p>Five notes. A few waves.<br>A tiny reminder to stay curious.</p></div>
+      <div class="wrap"><div class="play-heading reveal"><div><p class="eyebrow">03 / AN INTERFACE THAT FEELS ALIVE</p><h2 id="playTitle">Don’t just look.<br><em>Take control.</em></h2></div><p>Move your hand. Say the word.<br>Or let the universe do its thing.</p></div>
+      <div class="live-studio reveal" id="liveStudio">
+        <div class="studio-topbar"><div class="studio-brand"><span class="status-dot"></span> LIVE / VISUAL INTERFACE <span class="studio-version">V.02</span></div><div class="studio-tools"><button id="autoScenes" class="studio-tool active" type="button" aria-pressed="true">Auto scenes <span>On</span></button><button id="studioPause" class="studio-tool" type="button" aria-pressed="false">Pause</button><button id="studioFullscreen" class="studio-tool studio-expand" type="button" aria-label="Enter fullscreen">⤢</button></div></div>
+        <div class="studio-viewport" id="studioViewport" role="group" tabindex="0" aria-label="Interactive particle field" aria-describedby="sceneDescription">
+          <canvas id="studioCanvas" aria-hidden="true"></canvas>
+          <div class="studio-scene-label" aria-hidden="true"><span id="sceneIndex">01 / 04</span><h3 id="sceneName">GALAXY</h3><span class="scene-tagline" id="sceneTagline">A thousand little possibilities.</span></div>
+          <div class="studio-readouts" aria-hidden="true"><span>INPUT <b id="inputMode">AUTOPILOT</b></span><span>NODES <b id="nodeCount">—</b></span><span>SIGNAL <b id="gestureReadout">FLOWING</b></span></div>
+          <div class="studio-target" id="studioTarget" aria-hidden="true"><span></span><i></i></div>
+          <div class="camera-preview" id="cameraPreview" hidden><video id="handVideo" autoplay playsinline muted aria-label="Mirrored camera preview"></video><canvas id="handOverlay" aria-hidden="true"></canvas><span class="camera-preview-label"><i></i> CAMERA ON</span></div>
+          <div class="studio-stage-bottom"><span id="sceneDescription">Move to steer. Hold to attract. Double-click for a burst.<br><span>Keyboard: focus this canvas, then use arrows or Space.</span></span><button id="energyBurst" type="button">Send a signal <span>↗</span></button></div>
+          <div class="scene-progress" aria-hidden="true"><span id="sceneProgress"></span></div>
+        </div>
+        <div class="studio-controls"><div class="scene-buttons" role="group" aria-label="Choose a visual scene"><button type="button" class="scene-button active" data-scene="galaxy" aria-pressed="true"><span>✦</span> Galaxy</button><button type="button" class="scene-button" data-scene="reactor" aria-pressed="false"><span>◎</span> Reactor</button><button type="button" class="scene-button" data-scene="vortex" aria-pressed="false"><span>⌁</span> Vortex</button><button type="button" class="scene-button" data-scene="aurora" aria-pressed="false"><span>≈</span> Aurora</button></div><div class="sensor-buttons"><button id="cameraToggle" class="sensor-button" type="button" aria-pressed="false" aria-describedby="inputPrivacy"><svg class="icon"><use href="#i-camera"/></svg><span>Enable camera</span></button><button id="voiceToggle" class="sensor-button" type="button" aria-pressed="false" aria-describedby="inputPrivacy"><svg class="icon"><use href="#i-mic"/></svg><span>Enable voice</span></button></div></div>
+        <div class="studio-command"><span class="command-prefix" aria-hidden="true">J /</span><form id="visualCommandForm"><label class="visually-hidden" for="visualCommand">Type a visual command</label><input id="visualCommand" type="text" placeholder="Try “galaxy”, “burst”, or “change color”…" maxlength="180" autocomplete="off" spellcheck="false"><button type="submit" aria-label="Run visual command">Run <span>↵</span></button></form><span class="voice-indicator" id="voiceIndicator"><i></i> VOICE OFF</span></div>
+        <p class="studio-status" id="studioStatus" role="status">Autopilot engaged. Four worlds, always evolving.</p>
+      </div>
+      <div class="input-statuses"><p id="cameraStatus">Camera off. Mouse and touch are ready.</p><p id="voiceStatus">Voice off. Try saying “Jarvis, next scene” after enabling it.</p></div>
+      <p class="input-privacy" id="inputPrivacy">Camera frames are processed on your device. Voice recognition may send audio to your browser’s speech service. Both start only when enabled.</p>
+      <details class="control-guide" id="controlGuide"><summary><span>HOW TO COMMAND THE INTERFACE</span><span>Hands, voice &amp; keyboard <b>+</b></span></summary><div class="guide-content"><div><h3>Your hands are the controller.</h3><dl><div><dt>Move your hand</dt><dd>Steer the particle field.</dd></div><div><dt>Pinch</dt><dd>Pull particles into your hand.</dd></div><div><dt>Open palm</dt><dd>Push the field outwards.</dd></div><div><dt>Closed fist</dt><dd>Hold the flow. Open to release.</dd></div><div><dt>Peace sign · hold</dt><dd>Change scene, once per gesture.</dd></div><div><dt>Two hands</dt><dd>Move apart to expand the field.</dd></div></dl></div><div><h3>Say “Jarvis”, then…</h3><div class="voice-examples"><button type="button" data-command="next scene">next scene</button><button type="button" data-command="activate reactor">activate reactor</button><button type="button" data-command="change color">change color</button><button type="button" data-command="burst">burst</button><button type="button" data-command="pause animations">pause animations</button><button type="button" data-command="resume animations">resume animations</button><button type="button" data-command="show projects">show projects</button><button type="button" data-command="stop all inputs">stop all inputs</button></div><p>Tap any command to try it without a microphone. Voice controls this website; it doesn’t run commands on your computer.</p><p>Camera mode downloads MediaPipe tracking files from Google and jsDelivr. <a href="https://github.com/google-ai-edge/mediapipe/blob/master/mediapipe/tasks/web/vision/README.md" target="_blank" rel="noopener noreferrer">MediaPipe privacy notice ↗</a></p></div></div></details>
+      <div class="sound-lab-heading"><p class="eyebrow">A LITTLE SOMETHING FOR YOUR EARS</p><h3>Keep the curiosity audible.</h3></div>
       <div class="synth reveal"><div class="synth-top"><span class="mono"><span class="status-dot"></span> FREQUENCY PLAYGROUND</span><span class="synth-hint" id="synthHint">Tap a note. Sound starts muted.</span></div><div class="wave-display"><canvas id="waveCanvas" aria-hidden="true"></canvas><span class="wave-caption" aria-hidden="true">MAKE A LITTLE<br><b>WONDER.</b></span><span class="wave-frequency" id="waveFrequency" aria-hidden="true">— Hz</span></div><div class="synth-bottom"><div class="note-pads" role="group" aria-label="Play musical notes"><button type="button" class="note-pad" data-note="0" aria-label="Play C note, shortcut 1"><span>C</span><kbd>1</kbd></button><button type="button" class="note-pad" data-note="1" aria-label="Play D note, shortcut 2"><span>D</span><kbd>2</kbd></button><button type="button" class="note-pad" data-note="2" aria-label="Play E note, shortcut 3"><span>E</span><kbd>3</kbd></button><button type="button" class="note-pad" data-note="3" aria-label="Play G note, shortcut 4"><span>G</span><kbd>4</kbd></button><button type="button" class="note-pad" data-note="4" aria-label="Play A note, shortcut 5"><span>A</span><kbd>5</kbd></button></div><button class="synth-sound" id="synthSoundToggle" type="button" aria-pressed="false"><svg class="icon"><use href="#i-sound"/></svg><span>Enable sound</span></button></div></div>
       <p class="play-footnote">Built with Canvas &amp; Web Audio. <span>Headphones welcome.</span></p></div>
     </section>
@@ -126,6 +149,7 @@
 
   <dialog class="command-dialog" id="commandDialog" aria-labelledby="commandTitle"><div class="dialog-top"><h2 id="commandTitle">Where to?</h2><button class="icon-button" data-close-dialog type="button" aria-label="Close quick navigation"><svg class="icon"><use href="#i-close"/></svg></button></div><label class="command-search"><svg class="icon"><use href="#i-search"/></svg><input id="commandSearch" type="search" placeholder="Search pages, projects, links…" aria-label="Search quick navigation" autocomplete="off"></label><div class="command-results" id="commandResults"></div><div class="command-footer"><span>↑ ↓ to explore · Enter to open</span><kbd>esc to close</kbd></div></dialog>
   <dialog class="project-dialog" id="projectDialog" aria-labelledby="projectDialogTitle"><div class="dialog-top"><span class="eyebrow">BEHIND THE BUILD</span><button class="icon-button" data-close-dialog type="button" aria-label="Close project details"><svg class="icon"><use href="#i-close"/></svg></button></div><div id="projectDialogContent"></div></dialog>
+  <div class="input-beacon" id="inputBeacon" hidden><span><i></i> <span id="beaconLabel">CAMERA ON</span></span><button id="stopAllInputs" type="button">Stop inputs ×</button></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>

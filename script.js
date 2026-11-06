@@ -217,7 +217,7 @@
   const commands = [
     {name:'Selected work',group:'Page',action:() => goTo('#work')},
     {name:'About Arpit',group:'Page',action:() => goTo('#about')},
-    {name:'Frequency playground',group:'Page',action:() => goTo('#playground')},
+    {name:'Live visual interface · hands & voice',group:'Page',action:() => goTo('#playground')},
     {name:'Get in touch',group:'Page',action:() => goTo('#contact')},
     {name:'GitHub profile',group:'Link',url:'https://github.com/arpitkjaiswal'},
     {name:'LinkedIn',group:'Link',url:'https://www.linkedin.com/in/arpit-kumar-jaiswal-819478302'},
@@ -371,6 +371,8 @@
   let waveSize = {width:0,height:0};
   let heroVisible = true, waveVisible = false, frameID = 0, lastFrame = 0;
   let engineTime = 0, remix = 0, burstAt = -100, waveAt = -100, waveNote = 0;
+  let controlledHand = null;
+  document.addEventListener('portfolio:hand', event => { controlledHand = event.detail; });
   const pointCount = 840;
   const points = Array.from({length:pointCount},(_,index) => {
     const y = 1 - index / (pointCount - 1) * 2;
@@ -378,6 +380,10 @@
     const theta = index * Math.PI * (3-Math.sqrt(5));
     return {x:Math.cos(theta)*r,y,z:Math.sin(theta)*r,index};
   });
+  const heroForms = [points,
+    points.map((point,index)=>{const u=index/pointCount*Math.PI*2*7,v=(index%31)/31*Math.PI*2;return {x:(.73+.27*Math.cos(v))*Math.cos(u),y:.27*Math.sin(v),z:(.73+.27*Math.cos(v))*Math.sin(u)};}),
+    points.map((point,index)=>{const t=index/pointCount,a=t*Math.PI*10;return {x:Math.cos(a)*.68,y:(t-.5)*1.8,z:Math.sin(a)*.68};})
+  ];
   function fitCanvas(canvas, context) {
     const rect = canvas.getBoundingClientRect();
     const dpr = Math.min(devicePixelRatio || 1, 1.75);
@@ -400,13 +406,20 @@
     if (!heroContext || !heroSize.width) return;
     const ctx = heroContext, {width:w,height:h} = heroSize;
     ctx.clearRect(0,0,w,h);
-    const cx = w*.5, cy = h*.49;
-    const r = Math.min(w*.34,h*.31);
-    const angle = engineTime*.13 + remix*.47;
+    const cx = w*(.5+(controlledHand?(controlledHand.x-.5)*.12:0)), cy = h*(.49+(controlledHand?(controlledHand.y-.5)*.1:0));
+    const r = Math.min(w*.34,h*.31)*(controlledHand?Math.min(1.25,controlledHand.zoom):1);
+    const angle = engineTime*.13 + remix*.47+(controlledHand?(controlledHand.x-.5)*.55:0);
+    const phase=engineTime/19, form=Math.floor(phase)%3, next=(form+1)%3;
+    let blend=Math.min(1,Math.max(0,((phase%1)-.67)/.33));blend=blend*blend*(3-2*blend);
+    const formName=['ORBIT','TORUS','HELIX'][blend>.5?next:form];
+    const formLabel=document.getElementById('heroFormLabel');
+    if(formLabel)formLabel.textContent=`THE CURIOSITY ENGINE / ${formName}`;
+    const wireAlpha=form===0?1-blend:next===0?blend:0;
     const gradient = ctx.createRadialGradient(cx-r*.25,cy-r*.25,r*.05,cx,cy,r*1.15);
     gradient.addColorStop(0,`rgba(${theme.rgb},.055)`); gradient.addColorStop(.75,`rgba(${theme.rgb},.025)`); gradient.addColorStop(1,'transparent');
     ctx.fillStyle = gradient; ctx.beginPath(); ctx.arc(cx,cy,r*1.15,0,Math.PI*2); ctx.fill();
     // Latitude and longitude arcs rotate with the same sphere as the dots.
+    ctx.globalAlpha=wireAlpha;
     ctx.strokeStyle = `rgba(${theme.rgb},.10)`; ctx.lineWidth = .6;
     for (let latitude=-2;latitude<=2;latitude++) {
       const y = latitude*.31, radial = Math.sqrt(1-y*y);
@@ -420,7 +433,17 @@
       for(let step=0;step<=100;step++) { const t=step/100*Math.PI*2; const p=project3D({x:Math.cos(t)*Math.cos(a),y:Math.sin(t),z:Math.cos(t)*Math.sin(a)},angle,r,cx,cy); if(step===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y); }
       ctx.stroke();
     }
-    const projected = points.map(point => ({...project3D(point,angle,r,cx,cy),index:point.index})).sort((a,b)=>a.z-b.z);
+    ctx.globalAlpha=1;
+    const projected = points.map((point,index) => {
+      const a=heroForms[form][index],b=heroForms[next][index];
+      const shape={x:a.x+(b.x-a.x)*blend,y:a.y+(b.y-a.y)*blend,z:a.z+(b.z-a.z)*blend};
+      const p={...project3D(shape,angle,r,cx,cy),index:point.index};
+      if(controlledHand&&['pinch','palm'].includes(controlledHand.pose)){
+        const dx=controlledHand.x*w-p.x,dy=controlledHand.y*h-p.y,influence=Math.exp(-(dx*dx+dy*dy)/(r*r));
+        const force=controlledHand.pose==='pinch'?.4:-.25;p.x+=dx*influence*force;p.y+=dy*influence*force;
+      }
+      return p;
+    }).sort((a,b)=>a.z-b.z);
     projected.forEach(point => {
       const opacity = .1+(point.z+1)*.37;
       ctx.globalAlpha = opacity;
@@ -495,5 +518,6 @@
   $$('.note-pad').forEach(pad=>pad.addEventListener('click',()=>playNote(Number(pad.dataset.note))));
   document.addEventListener('keydown',event=>{if(event.repeat||event.ctrlKey||event.metaKey||event.altKey||document.querySelector('dialog[open]')||/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName)||document.activeElement?.isContentEditable)return;if(waveVisible&&/^[1-5]$/.test(event.key)){event.preventDefault();playNote(Number(event.key)-1);}});
   document.addEventListener('visibilitychange',()=>{if(document.hidden){audio.silence();if(audio.context?.state==='running')audio.context.suspend().catch(()=>{});if(frameID)cancelAnimationFrame(frameID);frameID=0;lastFrame=0;}else{updateClock();scheduleFrame();}});
+  document.addEventListener('portfolio:burst',()=>{burstAt=engineTime;audio.tone(392,.65,.1);audio.tone(783.99,.5,.04,.06);redraw();scheduleFrame();});
   window.addEventListener('pagehide',()=>audio.silence());
 })();
