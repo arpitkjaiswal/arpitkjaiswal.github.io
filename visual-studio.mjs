@@ -36,7 +36,7 @@ const stars=Array.from({length:100},(_,i)=>({x:((i*137.508)%997)/997,y:((i*89.31
 const projected=Array.from({length:count},(_,i)=>({x:0,y:0,z:0,index:i}));
 const connections=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
 
-function status(message){$('#studioStatus').textContent=message;}
+function status(message){$('#studioStatus').textContent=message;document.dispatchEvent(new CustomEvent('portfolio:status',{detail:{message}}));}
 function readPalette(){
   const css=getComputedStyle(root);accent=css.getPropertyValue('--accent').trim();
   palette=[accent,'#75dce5','#a89cf5','#f39bc4','#e7f5ff'];
@@ -46,6 +46,7 @@ function setScene(next,{source='manual'}={}){
   if(!SCENES.includes(next))return;
   if(next!==scene){previousScene=scene;scene=next;morphStart=clock;}
   sceneElapsed=0;
+  document.dispatchEvent(new CustomEvent('portfolio:scene',{detail:{scene,source}}));
   $('#sceneName').textContent=sceneCopy[scene].title;
   $('#sceneTagline').textContent=sceneCopy[scene].line;
   $('#sceneIndex').textContent=`0${SCENES.indexOf(scene)+1} / 04`;
@@ -72,6 +73,7 @@ function updateBeacon(){
   const cameraOn=cameraState==='tracking'||cameraState==='requesting'||cameraState==='loading';
   const voiceOn=voiceState==='listening'||voiceState==='starting';
   $('#inputBeacon').hidden=!cameraOn&&!voiceOn;
+  document.dispatchEvent(new CustomEvent('portfolio:inputs',{detail:{camera:cameraState,voice:voiceState}}));
   $('#beaconLabel').textContent=[cameraOn?(cameraState==='requesting'?'CAMERA STARTING':'CAMERA ON'):'',voiceOn?(voiceState==='starting'?'MIC STARTING':'MIC ON'):''].filter(Boolean).join(' + ');
 }
 function drawHandOverlay(landmarks){
@@ -103,9 +105,9 @@ const camera=new HandCamera({video:$('#handVideo'),
       lastHandsAt=now;
       if(candidatePose!==hands.pose){candidatePose=hands.pose;poseSince=now;}
       if(now-poseSince>=120)stablePose=hands.pose;
-      if(poseLatch.update(stablePose,now))nextScene(1,'hand');
+      if(poseLatch.update(stablePose,now)){if(root.classList.contains('deck-mode'))document.dispatchEvent(new CustomEvent('portfolio:deck',{detail:{action:'next'}}));else nextScene(1,'hand');}
       $('#cameraStatus').textContent=`${hands.count===2?'Two hands':'Hand'} detected · ${{pinch:'attract',palm:'repel',fist:'hold',peace:'hold to change scene',steer:'steering'}[stablePose]}.`;
-      document.dispatchEvent(new CustomEvent('portfolio:hand',{detail:{x:hands.x,y:hands.y,pose:stablePose,zoom:hands.zoom}}));
+      document.dispatchEvent(new CustomEvent('portfolio:hand',{detail:{x:hands.x,y:hands.y,cursorX:hands.cursorX,cursorY:hands.cursorY,pose:stablePose,zoom:hands.zoom}}));
     }else{if(camera.active)$('#cameraStatus').textContent='Camera ready. Raise a hand in the preview.';stablePose='steer';candidatePose='steer';poseSince=now;poseLatch.reset();document.dispatchEvent(new CustomEvent('portfolio:hand',{detail:null}));}
     drawHandOverlay(landmarks);
     if(paused)draw();
@@ -128,6 +130,10 @@ function executeCommand(text,{spoken=false}={}){
   }
   let reply='Done.';
   switch(command.type){
+    case 'openProject':{document.dispatchEvent(new CustomEvent('portfolio:project',{detail:{id:command.id}}));const project=window.PORTFOLIO.projects.find(p=>p.id===command.id);status(`Opening ${project?.name||'project'}.`);reply=`Opening ${project?.name||'project'}.`;break;}
+    case 'launchProject':case 'sourceProject':{document.dispatchEvent(new CustomEvent('portfolio:destination',{detail:{id:command.id,kind:command.type==='sourceProject'?'source':'demo'}}));reply='Opening the project.';break;}
+    case 'deck':document.dispatchEvent(new CustomEvent('portfolio:deck',{detail:{action:command.action}}));reply='Interface updated.';break;
+    case 'scroll':{const scroller=document.querySelector('dialog[open]')||(root.classList.contains('deck-mode')?document.querySelector('#deckMap'):document.scrollingElement);scroller?.scrollBy({top:command.direction*innerHeight*.55,behavior:paused?'instant':'smooth'});reply='Scrolling.';break;}
     case 'scene':setScene(command.scene,{source:spoken?'voice':'manual'});reply=`${command.scene} engaged.`;break;
     case 'next':nextScene(1,spoken?'voice':'manual');reply=`${scene} engaged.`;break;
     case 'previous':nextScene(-1,spoken?'voice':'manual');reply=`${scene} engaged.`;break;
@@ -139,13 +145,14 @@ function executeCommand(text,{spoken=false}={}){
     case 'navigate':{
       if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
       if(expanded)exitExpanded();
+      const navigation=new CustomEvent('portfolio:navigate',{cancelable:true,detail:{target:command.target}});if(!document.dispatchEvent(navigation)){reply='On your screen.';break;}
       const target=document.getElementById(command.target);location.hash=`#${command.target}`;
       target?.scrollIntoView({behavior:paused?'instant':'smooth'});status(`Showing ${command.target==='work'?'projects':command.target}.`);reply='On your screen.';break;
     }
     case 'cameraOff':camera.stop();reply='Camera off.';status('Camera stopped. Mouse and voice control are ready.');break;
     case 'voiceOff':voice.stop();status('Voice stopped. You can keep typing commands.');return true;
     case 'stopInputs':stopInputs();return true;
-    case 'help':if(expanded)exitExpanded();if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});$('#controlGuide').open=true;$('#controlGuide').scrollIntoView({block:'nearest',behavior:paused?'instant':'smooth'});status('The control guide is open just below the interface.');reply='Control guide open.';break;
+    case 'help':if(root.classList.contains('deck-mode')){document.dispatchEvent(new CustomEvent('portfolio:deck',{detail:{action:'help'}}));reply='Controls open.';break;}if(expanded)exitExpanded();if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});$('#controlGuide').open=true;$('#controlGuide').scrollIntoView({block:'nearest',behavior:paused?'instant':'smooth'});status('The control guide is open just below the interface.');reply='Control guide open.';break;
   }
   if(spoken){inputAt=performance.now();inputSource='VOICE';speak(reply);}
   return true;
@@ -165,6 +172,8 @@ const voice=new VoiceControl({
   },
   onTranscript:transcript=>executeCommand(transcript,{spoken:true})
 });
+document.addEventListener('portfolio:execute',event=>{if(typeof event.detail?.text==='string')executeCommand(event.detail.text);});
+document.addEventListener('portfolio:exitStudio',()=>{if(expanded)exitExpanded();if(document.fullscreenElement===studio)document.exitFullscreen().catch(()=>{});});
 $('#cameraToggle').addEventListener('click',()=>{
   if(camera.active||camera.loading)camera.stop();
   else if(!window.isSecureContext||!navigator.mediaDevices?.getUserMedia){$('#cameraStatus').textContent='Camera mode needs HTTPS and a supported browser. Mouse and touch are ready.';}

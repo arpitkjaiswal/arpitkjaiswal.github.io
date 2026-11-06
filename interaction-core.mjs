@@ -1,3 +1,4 @@
+import {projectCommand} from './deck-core.mjs';
 /* Pure input interpretation. These functions never access a camera or microphone. */
 export const SCENES = Object.freeze(['reactor', 'galaxy', 'vortex', 'aurora']);
 export const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
@@ -27,7 +28,7 @@ export function readHand(points) {
   else if (extended[0] && extended[1] && !extended[2] && !extended[3]) pose = 'peace';
   else if (count >= 4) pose = 'palm';
   else if (count === 0) pose = 'fist';
-  return {x:clamp(1-center.x), y:clamp(center.y), pose, pinch:clamp(1-pinchRatio/0.8), span};
+  return {x:clamp(1-center.x), y:clamp(center.y), cursorX:clamp(1-points[8].x), cursorY:clamp(points[8].y), pose, pinch:clamp(1-pinchRatio/0.8), span};
 }
 
 export function readHands(landmarks) {
@@ -59,10 +60,16 @@ export function parseCommand(transcript, {requireWakeWord = true} = {}) {
   const wake = /^(?:hey |okay |ok )?jarvis\b\s*/;
   if (requireWakeWord && !wake.test(text)) return null;
   text = text.replace(wake, '').replace(/^please /,'').replace(/ please$/,'').trim();
+  const project=projectCommand(text);if(project)return project;
   if (SCENES.includes(text)) return {type:'scene',scene:text};
   const scene = text.match(/^(?:show|switch to|activate|engage)(?: the)? (reactor|galaxy|vortex|aurora)(?: mode)?$/);
   if (scene) return {type:'scene',scene:scene[1]};
   const exact = {
+    'mission control':{type:'deck',action:'home'},'game mode':{type:'deck',action:'home'},
+    'classic mode':{type:'deck',action:'classic'},'classic portfolio':{type:'deck',action:'classic'},
+    'next project':{type:'deck',action:'next'},'previous project':{type:'deck',action:'previous'},
+    'open selected project':{type:'deck',action:'open'},'close project':{type:'deck',action:'back'},'back':{type:'deck',action:'back'},
+    'scroll down':{type:'scroll',direction:1},'scroll up':{type:'scroll',direction:-1},
     'next scene':{type:'next'},'next mode':{type:'next'},
     'previous scene':{type:'previous'},'previous mode':{type:'previous'},
     'change color':{type:'palette'},'change colour':{type:'palette'},'change colors':{type:'palette'},

@@ -194,12 +194,16 @@
   function openProject(id) {
     const project = projects.find(item => item.id === id);
     if (!project) return;
-    $('#projectDialogContent').innerHTML = `${project.art ? `<img class="dialog-project-art" src="${project.art}" width="720" height="440" alt="Illustrative artwork for ${escapeHTML(project.name)}">` : ''}<h2 id="projectDialogTitle">${escapeHTML(project.name)}</h2><p class="dialog-subtitle">${escapeHTML(project.stage)} / ${escapeHTML(project.category)}</p><p class="dialog-description">${escapeHTML(project.detail)}</p><ul class="dialog-features">${project.features.map(feature => `<li>${escapeHTML(feature)}</li>`).join('')}</ul><p class="dialog-boundary">${escapeHTML(project.boundary)}</p><div class="dialog-links"><a class="button button-primary" href="${repoURL(project)}" target="_blank" rel="noopener noreferrer">Explore the source ${icon('github')}</a>${project.demo ? `<a class="button button-outline" href="${project.demo}" target="_blank" rel="noopener noreferrer">Play browser edition ${icon('arrow')}</a>` : ''}</div>`;
+    if(projectDialog.open)projectDialog.close();
+    document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());
+    $('#projectDialogContent').innerHTML = `${project.art ? `<img class="dialog-project-art" src="${project.art}" width="720" height="440" alt="Illustrative artwork for ${escapeHTML(project.name)}">` : ''}<h2 id="projectDialogTitle">${escapeHTML(project.name)}</h2><p class="dialog-subtitle">${escapeHTML(project.stage)} / ${escapeHTML(project.category)}</p><p class="dialog-description">${escapeHTML(project.detail)}</p><ul class="dialog-features">${project.features.map(feature => `<li>${escapeHTML(feature)}</li>`).join('')}</ul><p class="dialog-boundary">${escapeHTML(project.boundary)}</p><div class="dialog-links"><a class="button button-primary" href="${repoURL(project)}" data-hand-action="source:${project.id}" target="_blank" rel="noopener noreferrer">Explore the source ${icon('github')}</a>${project.demo ? `<a class="button button-outline" href="${project.demo}" data-hand-action="demo:${project.id}" target="_blank" rel="noopener noreferrer">Play browser edition ${icon('arrow')}</a>` : ''}</div>`;
     projectDialog.style.setProperty('--project-color', project.color);
     projectDialog.showModal();
     lockDialogScroll();
     projectDialog.scrollTop = 0;
+    document.dispatchEvent(new CustomEvent('portfolio:project-opened',{detail:{id:project.id}}));
   }
+  document.addEventListener('portfolio:project',event=>{if(projects.some(p=>p.id===event.detail?.id))openProject(event.detail.id);});
   grid.addEventListener('click', event => { const button = event.target.closest('[data-details]'); if (button) openProject(button.dataset.details); });
   $$('dialog').forEach(dialog => {
     $('[data-close-dialog]', dialog).addEventListener('click', () => dialog.close());
@@ -215,6 +219,7 @@
   let selectedCommand = 0;
   let currentCommands = [];
   const commands = [
+    {name:'Mission control · game mode',group:'Page',action:() => {location.hash='#deck';}},
     {name:'Selected work',group:'Page',action:() => goTo('#work')},
     {name:'About Arpit',group:'Page',action:() => goTo('#about')},
     {name:'Live visual interface · hands & voice',group:'Page',action:() => goTo('#playground')},
