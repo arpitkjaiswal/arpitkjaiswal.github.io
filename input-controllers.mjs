@@ -1,4 +1,4 @@
-import {cameraMessage} from './interaction-core.mjs?v=20261106-deck1';
+import {cameraMessage} from './interaction-core.mjs?v=20261106-ux2';
 
 // Matching, pinned JS/WASM versions; loaded only after explicit camera activation.
 export const VISION_CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21';

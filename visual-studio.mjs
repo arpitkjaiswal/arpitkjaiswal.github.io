@@ -1,5 +1,5 @@
-import {SCENES, clamp, readHands, PoseLatch, parseCommand, particleShape} from './interaction-core.mjs?v=20261106-deck1';
-import {HandCamera, VoiceControl, handGraphicsAvailable} from './input-controllers.mjs?v=20261106-deck1';
+import {SCENES, clamp, readHands, PoseLatch, parseCommand, particleShape} from './interaction-core.mjs?v=20261106-ux2';
+import {HandCamera, VoiceControl, handGraphicsAvailable} from './input-controllers.mjs?v=20261106-ux2';
 
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
@@ -58,6 +58,7 @@ function setScene(next,{source='manual'}={}){
 function nextScene(direction=1,source='manual'){setScene(SCENES[(SCENES.indexOf(scene)+direction+SCENES.length)%SCENES.length],{source});}
 function setAuto(value){
   auto=value;sceneElapsed=0;
+  document.dispatchEvent(new CustomEvent('portfolio:autopilot',{detail:{enabled:value}}));
   $('#autoScenes').setAttribute('aria-pressed',String(auto));$('#autoScenes').classList.toggle('active',auto);
   $('#autoScenes span').textContent=auto?'On':'Off';
   status(auto?'Autopilot engaged. Scenes will evolve automatically.':'Auto scene changes off. Pick a world and make it yours.');
@@ -106,7 +107,7 @@ const camera=new HandCamera({video:$('#handVideo'),
       if(candidatePose!==hands.pose){candidatePose=hands.pose;poseSince=now;}
       if(now-poseSince>=120)stablePose=hands.pose;
       if(poseLatch.update(stablePose,now)){if(root.classList.contains('deck-mode'))document.dispatchEvent(new CustomEvent('portfolio:deck',{detail:{action:'next'}}));else nextScene(1,'hand');}
-      $('#cameraStatus').textContent=`${hands.count===2?'Two hands':'Hand'} detected · ${{pinch:'attract',palm:'repel',fist:'hold',peace:'hold to change scene',steer:'steering'}[stablePose]}.`;
+      $('#cameraStatus').textContent=root.classList.contains('deck-mode')?`${hands.count===2?'Two hands':'Hand'} detected · ${{pinch:'pinch to select, then release',palm:'open palm near an edge to scroll',fist:'relax your fingers to point',peace:'hold for the next project',steer:'point at a project, then pinch thumb and index'}[stablePose]}.`:`${hands.count===2?'Two hands':'Hand'} detected · ${{pinch:'attract',palm:'repel',fist:'hold',peace:'hold to change scene',steer:'steering'}[stablePose]}.`;
       document.dispatchEvent(new CustomEvent('portfolio:hand',{detail:{x:hands.x,y:hands.y,cursorX:hands.cursorX,cursorY:hands.cursorY,pose:stablePose,zoom:hands.zoom}}));
     }else{if(camera.active)$('#cameraStatus').textContent='Camera ready. Raise a hand in the preview.';stablePose='steer';candidatePose='steer';poseSince=now;poseLatch.reset();document.dispatchEvent(new CustomEvent('portfolio:hand',{detail:null}));}
     drawHandOverlay(landmarks);
@@ -123,9 +124,9 @@ function stopInputs(message='Inputs stopped. Autopilot is ready.'){
   camera.stop();voice.stop();if('speechSynthesis'in window)speechSynthesis.cancel();status(message);
 }
 function executeCommand(text,{spoken=false}={}){
-  const command=parseCommand(text,{requireWakeWord:spoken});
+  const command=parseCommand(text,{requireWakeWord:spoken,projects:window.PORTFOLIO.projects,projectIds:window.PORTFOLIO_SPOTLIGHT});
   if(!command){
-    if(!spoken||/\bjarvis\b/i.test(text))status('Command not recognized. Try “next scene”, “galaxy”, “burst”, or open the guide.');
+    if(!spoken||/\bjarvis\b/i.test(text))status('Try “open LEXA”, “all projects”, “change color”, or “help”. You can also search projects with /.');
     return false;
   }
   let reply='Done.';
@@ -172,11 +173,11 @@ const voice=new VoiceControl({
   },
   onTranscript:transcript=>executeCommand(transcript,{spoken:true})
 });
-document.addEventListener('portfolio:execute',event=>{if(typeof event.detail?.text==='string')executeCommand(event.detail.text);});
+document.addEventListener('portfolio:execute',event=>{if(typeof event.detail?.text!=='string'||!executeCommand(event.detail.text))event.preventDefault();});
 document.addEventListener('portfolio:exitStudio',()=>{if(expanded)exitExpanded();if(document.fullscreenElement===studio)document.exitFullscreen().catch(()=>{});});
 $('#cameraToggle').addEventListener('click',()=>{
   if(camera.active||camera.loading)camera.stop();
-  else if(!window.isSecureContext||!navigator.mediaDevices?.getUserMedia){$('#cameraStatus').textContent='Camera mode needs HTTPS and a supported browser. Mouse and touch are ready.';}
+  else if(!window.isSecureContext||!navigator.mediaDevices?.getUserMedia){const message='Camera mode needs HTTPS and a supported browser. Mouse and touch are ready.';$('#cameraStatus').textContent=message;status(message);}
   else if(!handGraphicsAvailable()){const message='Hand tracking graphics are unavailable in this browser. Mouse, touch, and voice still work.';$('#cameraStatus').textContent=message;status(message);}
   else camera.start();
 });

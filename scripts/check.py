@@ -38,7 +38,7 @@ for fragment in page.fragments:
     assert fragment in page.ids, f'Missing internal anchor: {fragment}'
 for asset in page.local:
     assert (ROOT / asset.split('?',1)[0]).is_file(), f'Missing local file: {asset}'
-for file in ['script.js','projects.js',*(p.name for p in ROOT.glob('*.mjs'))]:
+for file in [*(p.name for p in ROOT.glob('*.js')),*(p.name for p in ROOT.glob('*.mjs'))]:
     subprocess.run(['node','--check',str(ROOT / file)], check=True)
 result = subprocess.run(['node','-e', "const vm=require('node:vm'),fs=require('node:fs');const s={window:{}};vm.runInNewContext(fs.readFileSync(process.argv[1],'utf8'),s);process.stdout.write(JSON.stringify(s.window.PORTFOLIO));", str(ROOT/'projects.js')], capture_output=True, text=True, check=True)
 data = json.loads(result.stdout)
@@ -51,6 +51,9 @@ for project in data['projects']:
     for field in ('description','stage','detail','boundary','features','tags','updated'):
         assert project[field], f'Missing {field}: {project["name"]}'
     if 'art' in project: assert (ROOT / project['art']).is_file()
+snapshot_result=subprocess.run(['node','-e',"const vm=require('node:vm'),fs=require('node:fs');const s={window:{}};vm.runInNewContext(fs.readFileSync(process.argv[1],'utf8'),s);process.stdout.write(JSON.stringify(s.window.PORTFOLIO_REPOS));",str(ROOT/'catalog-data.js')],capture_output=True,text=True,check=True)
+snapshot=json.loads(snapshot_result.stdout)
+assert all(repo.get('private') is False and repo.get('owner',{}).get('login','').lower()=='arpitkjaiswal' for repo in snapshot['repos']), 'Only public owned metadata can ship in the snapshot.'
 for svg in (ROOT/'assets').glob('*.svg'): ET.parse(svg)
 ET.parse(ROOT/'favicon.svg')
 png=(ROOT/'assets/social-card.png').read_bytes()

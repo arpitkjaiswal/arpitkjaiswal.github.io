@@ -12,14 +12,14 @@ Open `http://localhost:8000`. The repository root is the GitHub Pages publishing
 
 ## Inside
 
-- A default full-viewport command deck with nine project portals, generative constellations, a target scanner, and a controllable ship cursor.
-- Point-and-pinch project navigation, WASD/arrow selection, 1–9 quick-open, and session-local discovery XP. XP is a playful exploration counter, not a professional statistic.
+- A default full-viewport command deck with nine spotlight project portals, generative constellations, a target scanner, and a controllable ship cursor.
+- Point-and-pinch project navigation, global WASD/arrow selection, 1–9 quick-open, / for project search, Escape to stop active inputs outside dialogs, and session-local discovery XP. XP is a playful exploration counter, not a professional statistic.
 
 - A particle hero that automatically morphs between a globe, torus, and helix; three color palettes; ambient stars; and a shared pause control.
 - A live visual interface with Galaxy, Reactor, Vortex, and Aurora scenes, automatic transitions, fullscreen/expanded view, pointer and keyboard control, and energy pulses.
 - Optional camera hand tracking and JARVIS-style voice commands, backed by a typed command interface.
-- Nine curated projects with search, category filters, direct repository links, and detailed project panels.
-- Public GitHub repository counts and update dates, with a labeled snapshot, a 20-minute browser cache, and graceful network failure handling.
+- Nine reviewed project writeups plus an automatically growing public repository catalog. The searchable archive has category filters, newest/star/name sorting, complete project cards, and direct source links. The checked snapshot contains 44 eligible builds after excluding the profile and portfolio repos.
+- Public GitHub repository counts and update dates, with a labeled public snapshot, a five-minute browser cache, paginated refresh, and graceful network failure handling. Refreshes run while visible and when returning to the page.
 - A five-note frequency playground, with optional synthesized sound and keyboard shortcuts.
 - Responsive navigation, a searchable Ctrl/Cmd+K launcher, native dialogs, visible keyboard focus, and reduced-motion support.
 - Original SVG project artwork, plus PNG social-sharing artwork.
@@ -28,7 +28,7 @@ Sound always starts muted. Canvas animations pause offscreen or when the tab is 
 
 ## Edit
 
-The HTML entry points and local ES-module imports share a release query (`v=20261106-deck1`). Bump it together when changing browser code so returning visitors load a consistent release from GitHub Pages.
+The HTML entry points and local ES-module imports share a release query (`v=20261106-ux2`). Bump it together when changing browser code so returning visitors load a consistent release from GitHub Pages.
 
 | File | Purpose |
 | --- | --- |
@@ -39,6 +39,11 @@ The HTML entry points and local ES-module imports share a release query (`v=2026
 | `deck-core.mjs` | Pure project aliases, selection gate, keyboard movement, and XP rules |
 | `hand-navigation.mjs` | Landmark pointer, visible-target hit testing, pinch selection, and scrolling |
 | `command-deck.css` | Command deck HUD, responsive map, gesture cursor, and project file styling |
+| `experience.css` | Readable controls, guidance, phone layouts, and the full project archive |
+| `catalog-data.js` | Public-only GitHub metadata fallback snapshot |
+| `catalog-core.mjs` | Repo validation, filtering, curated merge, spotlight selection, and pagination |
+| `project-catalog.mjs` | Shared live refresh, bounded cache, and catalog events |
+| `project-library.mjs` | Searchable project archive, category controls, sorting, and sync status |
 | `visual-studio.mjs` | Generative scenes, ambient art, hand/voice integration, and immersive view |
 | `interaction-core.mjs` | Pure gesture interpretation, bounded voice commands, and scene geometry |
 | `input-controllers.mjs` | Opt-in camera and microphone lifecycle, cancellation, and failure handling |
@@ -52,10 +57,20 @@ Project descriptions were checked against public repository READMEs on **6 Novem
 
 ```sh
 python3 scripts/check.py
-node --test scripts/interaction.test.mjs scripts/deck.test.mjs
+node --test scripts/*.test.mjs
 ```
 
 This checks JavaScript syntax, local assets, SVG validity, internal links, project metadata, and image dimensions. Node.js is needed for JavaScript checks. Browser checks should cover search and reset, category filters, project dialogs and Escape, keyboard launcher, mobile navigation, note controls, sound mute, palette and motion controls, and contact copying.
+
+## Automatically showing new repos
+
+Original public repos appear without editing `projects.js`. The current checked snapshot has 44 eligible projects; public counts can change as GitHub changes. The live API refresh follows up to ten 100-repo pages, excludes forks, archived/disabled repos, and the profile/portfolio repos, and retains the prior complete catalog if a refresh fails. The client never contains a GitHub token. The static integrity check rejects nonpublic snapshot metadata.
+
+- Add the GitHub topic **`portfolio-featured`** to promote an important repo into the nine-slot main constellation. Other reviewed builds fill the remaining slots; every eligible repo stays searchable in the archive.
+- Add **`portfolio-hidden`** to omit a repo. Private repos are never admitted to the live catalog.
+- A repo's description, main language, topics, stars, and dates supply its card. Unreviewed repos are labeled **From GitHub** / **GitHub repository** and receive no fabricated demo, feature list, or release status.
+- Updates use a five-minute cache. A visible page checks periodically, returning to the tab checks stale data, and **Refresh GitHub** forces a check with a 45-second cooldown. This is a visitor-side refresh; a closed page does not run a background job.
+- Voice and quick navigation resolve against the current catalog. Project numbers 1–9 follow the visible spotlight order. An unknown or ambiguous name runs no action.
 
 ## Hand and voice controls
 
@@ -74,8 +89,8 @@ The SDK is pinned to `@mediapipe/tasks-vision@0.10.21` with matching WASM files,
 
 The Node suite covers command boundaries, geometric input invariance, scene coordinates, hold/release logic, canceled permission requests, late model initialization, tracker failure cleanup, speech-service failures, and stopped recognizers. These checks use controlled landmarks and injected lifecycle fakes; they are not physical sensor acceptance tests.
 
-All 30 Node tests passed, including project aliases and wake-word boundaries, mirrored fingertip mapping, selection hold/release, target changes under a held pinch, hand-loss rearming, unique discoveries, and keyboard wrapping.
+All 42 Node tests passed, including project aliases and wake-word boundaries, mirrored fingertip mapping, selection hold/release, target changes under a held pinch, hand-loss rearming, unique discoveries, and keyboard wrapping.
 
-The managed browser exercised the command deck at 320, 390, and 768 px widths, project clicks, typed project commands, keyboard selection, unique XP, and classic navigation. A temporary same-origin fixture sent explicitly simulated hand events through the real page: point and pinch opened LEXA, a held pinch over the modal close button did not close it, releasing and pinching closed it, and tracking loss hid the cursor. These integration checks do not establish physical tracking accuracy.
+The managed browser exercised the command deck at 320, 390, and 768 px widths and compact 568 px heights, project clicks, typed project commands, global keyboard selection, unique XP, search/empty/reset states, category filters, sorting, raw GitHub project files, sound/mute, pause/resume, and classic navigation. A temporary same-origin fixture sent explicitly simulated hand events through the real page: point and pinch opened LEXA, a held pinch over the modal close button did not close it, releasing and pinching closed it, and tracking loss hid the cursor. A simulated new featured repository appeared automatically in the spotlight and library. A simulated SpeechRecognition lifecycle exercised enable, transcript handling, Escape stop, microphone-denial messaging, and ignored late transcripts. Native fullscreen was rejected by the managed browser, so the rejection feedback was verified. These integration checks do not establish physical tracking or microphone accuracy.
 
 The managed browser rendered the four scenes and exercised typed commands, animation pause/resume, expanded view, and fallback controls. The SDK, WASM, and model downloaded during a runtime check, but inference could not complete because that browser could not create a WebGL context. Physical camera landmarks and live microphone transcription still need verification on the target Mac. The interface reports unavailable graphics, denied/busy/missing hardware, unsupported speech, and network errors without claiming an active connection.

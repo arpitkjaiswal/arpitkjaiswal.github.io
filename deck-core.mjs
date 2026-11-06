@@ -9,18 +9,23 @@ const ALIASES=Object.freeze({
   orbitwarden:'orbitwarden','orbit warden':'orbitwarden',concord:'concord',
   veildb:'veildb','veil db':'veildb',devos:'devos','dev os':'devos'
 });
-export function resolveProject(value){
+export function resolveProject(value,{projects=null,projectIds=PROJECT_IDS}={}){
   if(typeof value!=='string')return null;
   const text=value.toLowerCase().trim().replace(/\s+/g,' ');
   const ordinal={one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9};
   const number=text.match(/^project (one|two|three|four|five|six|seven|eight|nine|[1-9])$/);
-  if(number)return PROJECT_IDS[Number(ordinal[number[1]]||number[1])-1];
-  return Object.prototype.hasOwnProperty.call(ALIASES,text)?ALIASES[text]:null;
+  if(number)return projectIds[Number(ordinal[number[1]]||number[1])-1]||null;
+  if(!projects)return Object.prototype.hasOwnProperty.call(ALIASES,text)?ALIASES[text]:null;
+  const normalize=value=>String(value).toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+  const wanted=normalize(text),compact=wanted.replace(/\s/g,'');
+  const aliased=Object.prototype.hasOwnProperty.call(ALIASES,wanted)?ALIASES[wanted]:null;
+  const matches=projects.filter(p=>p.id===aliased||[p.id,p.name,p.repo,...(p.aliases||[])].some(name=>{const known=normalize(name);return known===wanted||known.replace(/\s/g,'')===compact;}));
+  return matches.length===1?matches[0].id:null;
 }
-export function projectCommand(text){
-  const match=text.match(/^(open|inspect|show|tell me about|launch|play|source for|code for) (.+?)(?: project)?$/);
+export function projectCommand(text,options){
+  const match=text.match(/^(open|inspect|show|tell me about|launch|play|source for|code for) (.+)$/);
   if(!match)return null;
-  const id=resolveProject(match[2]);if(!id)return null;
+  const id=resolveProject(match[2],options)||(match[2].endsWith(' project')?resolveProject(match[2].slice(0,-8),options):null);if(!id)return null;
   return {type:['launch','play'].includes(match[1])?'launchProject':['source for','code for'].includes(match[1])?'sourceProject':'openProject',id};
 }
 export function mapHandPointer(x,y){
@@ -48,7 +53,8 @@ export class PinchSelector{
 export class ExplorerProgress{
   constructor(ids=PROJECT_IDS){this.ids=new Set(ids);this.visited=new Set();}
   visit(id){const fresh=this.ids.has(id)&&!this.visited.has(id);if(fresh)this.visited.add(id);return {...this.snapshot(),fresh};}
-  snapshot(){const count=this.visited.size;return {count,total:this.ids.size,xp:count*100,rank:count===this.ids.size?'CARTOGRAPHER':count>=5?'BUILDER':count?'SCOUT':'INITIATE'};}
+  setCatalog(ids){this.ids=new Set(ids);this.visited=new Set([...this.visited].filter(id=>this.ids.has(id)));return this.snapshot();}
+  snapshot(){const count=this.visited.size;return {count,total:this.ids.size,xp:count*100,rank:count>0&&count===this.ids.size?'CARTOGRAPHER':count>=5?'BUILDER':count?'SCOUT':'INITIATE'};}
 }
 export function moveProjectIndex(index,key,total,columns=3){
   if(!Number.isInteger(total)||total<1)return 0;

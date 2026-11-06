@@ -153,13 +153,15 @@
 
   // Curated projects have real repository destinations and explicit stages.
   const grid = $('#projectGrid');
+  function renderGallery(){
+  grid.replaceChildren();
   projects.forEach((project, index) => {
     const card = document.createElement('article');
     card.className = `project-card${project.compact ? ' compact' : ''}`;
     card.dataset.project = project.id;
     card.style.setProperty('--project-color', project.color);
     const tags = project.tags.map(tag => `<span>${escapeHTML(tag)}</span>`).join('');
-    const details = `<button class="project-details" type="button" data-details="${project.id}" aria-label="Read about ${escapeHTML(project.name)}">Inside the build ${icon('arrow')}</button>`;
+    const details = `<button class="project-details" type="button" data-details="${project.id}" data-hand-action="project:${project.id}" aria-label="Read about ${escapeHTML(project.name)}">Inside the build ${icon('arrow')}</button>`;
     if (project.compact) {
       card.innerHTML = `<span class="compact-symbol" aria-hidden="true">${project.symbol}</span><div class="project-info"><h3><a href="${repoURL(project)}" target="_blank" rel="noopener noreferrer">${escapeHTML(project.name)}</a></h3><p class="compact-stage">${escapeHTML(project.stage)}</p><div class="project-tags">${tags}</div></div><p class="project-description">${escapeHTML(project.description)}</p>${details}`;
     } else {
@@ -167,6 +169,8 @@
     }
     grid.appendChild(card);
   });
+  }
+  renderGallery();
   let activeFilter = 'all';
   function filterProjects() {
     const query = $('#projectSearch').value.toLowerCase().trim();
@@ -189,6 +193,7 @@
   $('#projectSearch').addEventListener('input', filterProjects);
   $('#clearFilters').addEventListener('click', () => { $('#projectSearch').value = ''; $('[data-filter="all"]').click(); $('#projectSearch').focus(); });
   filterProjects();
+  document.addEventListener('portfolio:catalog',()=>{renderGallery();filterProjects();if(commandDialog.open)renderCommands();});
 
   const projectDialog = $('#projectDialog');
   function openProject(id) {
@@ -196,7 +201,7 @@
     if (!project) return;
     if(projectDialog.open)projectDialog.close();
     document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());
-    $('#projectDialogContent').innerHTML = `${project.art ? `<img class="dialog-project-art" src="${project.art}" width="720" height="440" alt="Illustrative artwork for ${escapeHTML(project.name)}">` : ''}<h2 id="projectDialogTitle">${escapeHTML(project.name)}</h2><p class="dialog-subtitle">${escapeHTML(project.stage)} / ${escapeHTML(project.category)}</p><p class="dialog-description">${escapeHTML(project.detail)}</p><ul class="dialog-features">${project.features.map(feature => `<li>${escapeHTML(feature)}</li>`).join('')}</ul><p class="dialog-boundary">${escapeHTML(project.boundary)}</p><div class="dialog-links"><a class="button button-primary" href="${repoURL(project)}" data-hand-action="source:${project.id}" target="_blank" rel="noopener noreferrer">Explore the source ${icon('github')}</a>${project.demo ? `<a class="button button-outline" href="${project.demo}" data-hand-action="demo:${project.id}" target="_blank" rel="noopener noreferrer">Play browser edition ${icon('arrow')}</a>` : ''}</div>`;
+    $('#projectDialogContent').innerHTML = `${project.art ? `<img class="dialog-project-art" src="${project.art}" width="720" height="440" alt="Illustrative artwork for ${escapeHTML(project.name)}">` : ''}<h2 id="projectDialogTitle">${escapeHTML(project.name)}</h2><p class="dialog-subtitle">${escapeHTML(project.stage)} / ${escapeHTML(project.category)}</p><p class="dialog-description">${escapeHTML(project.detail)}</p><ul class="dialog-features">${project.features.map(feature => `<li>${escapeHTML(feature)}</li>`).join('')}</ul><p class="dialog-boundary">${escapeHTML(project.boundary)}</p><div class="dialog-links"><a class="button button-primary" href="${repoURL(project)}" data-hand-action="source:${project.id}" target="_blank" rel="noopener noreferrer">Explore the source ${icon('github')}</a>${project.demo ? `<a class="button button-outline" href="${project.demo}" data-hand-action="demo:${project.id}" target="_blank" rel="noopener noreferrer">${project.categories.includes('play')?'Play browser edition':'Open live demo'} ${icon('arrow')}</a>` : ''}<button type="button" class="button button-outline" data-return-library data-hand-action="nav:library">All projects ${icon('arrow')}</button></div>`;
     projectDialog.style.setProperty('--project-color', project.color);
     projectDialog.showModal();
     lockDialogScroll();
@@ -204,6 +209,7 @@
     document.dispatchEvent(new CustomEvent('portfolio:project-opened',{detail:{id:project.id}}));
   }
   document.addEventListener('portfolio:project',event=>{if(projects.some(p=>p.id===event.detail?.id))openProject(event.detail.id);});
+  projectDialog.addEventListener('click',event=>{if(event.target.closest('[data-return-library]'))document.dispatchEvent(new CustomEvent('portfolio:library'));});
   grid.addEventListener('click', event => { const button = event.target.closest('[data-details]'); if (button) openProject(button.dataset.details); });
   $$('dialog').forEach(dialog => {
     $('[data-close-dialog]', dialog).addEventListener('click', () => dialog.close());
@@ -219,6 +225,7 @@
   let selectedCommand = 0;
   let currentCommands = [];
   const commands = [
+    {name:'All projects · GitHub archive',group:'Page',action:() => document.dispatchEvent(new CustomEvent('portfolio:library'))},
     {name:'Mission control · game mode',group:'Page',action:() => {location.hash='#deck';}},
     {name:'Selected work',group:'Page',action:() => goTo('#work')},
     {name:'About Arpit',group:'Page',action:() => goTo('#about')},
@@ -227,7 +234,6 @@
     {name:'GitHub profile',group:'Link',url:'https://github.com/arpitkjaiswal'},
     {name:'LinkedIn',group:'Link',url:'https://www.linkedin.com/in/arpit-kumar-jaiswal-819478302'},
     {name:'Email Arpit',group:'Contact',url:'mailto:arpit.kr.jaiswal@gmail.com'},
-    ...projects.map(project => ({name:project.name,group:'Project',keywords:project.tags.join(' '),action:() => openProject(project.id)}))
   ];
   function goTo(hash) { location.hash = hash; $(hash)?.scrollIntoView({behavior:motionPaused ? 'instant' : 'smooth'}); }
   function selectCommand(index) {
@@ -238,7 +244,7 @@
   }
   function renderCommands() {
     const query = commandSearch.value.trim().toLowerCase();
-    currentCommands = commands.filter(command => `${command.name} ${command.group} ${command.keywords || ''}`.toLowerCase().includes(query));
+    currentCommands = [...commands,...projects.map(project=>({name:project.name,group:'Project',keywords:[project.repo,...project.tags].join(' '),action:()=>openProject(project.id)}))].filter(command => `${command.name} ${command.group} ${command.keywords || ''}`.toLowerCase().includes(query));
     const result = $('#commandResults');
     result.replaceChildren();
     if (!currentCommands.length) result.innerHTML = '<p class="command-empty">No matches. Try “work”, “AI”, or a project name.</p>';
@@ -258,7 +264,7 @@
     });
     selectCommand(0);
   }
-  function openCommands() { closeMenu(); commandSearch.value = ''; commandDialog.showModal(); lockDialogScroll(); renderCommands(); commandSearch.focus(); }
+  function openCommands() { closeMenu(); document.querySelectorAll('dialog[open]').forEach(node=>node.close()); commandSearch.value = ''; commandDialog.showModal(); lockDialogScroll(); renderCommands(); commandSearch.focus(); }
   $('#commandTrigger').addEventListener('click', openCommands);
   $('#mobileCommand').addEventListener('click', openCommands);
   commandSearch.setAttribute('role','combobox');
@@ -284,7 +290,7 @@
   function dateLabel(value) { return new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(value)); }
   function renderUpdates(updates) {
     const recent = $('#recentUpdates'); recent.replaceChildren();
-    [...updates].sort((a,b) => Date.parse(b.updated) - Date.parse(a.updated)).slice(0,5).forEach(update => {
+    [...updates].filter(item=>Number.isFinite(Date.parse(item.updated))).sort((a,b) => Date.parse(b.updated) - Date.parse(a.updated)).slice(0,5).forEach(update => {
       const project = projects.find(item => item.repo === update.repo); if (!project) return;
       const row = document.createElement('div'); row.className = 'recent-item'; row.style.setProperty('--item-color', project.color);
       const dot = document.createElement('span'); dot.setAttribute('aria-hidden','true');
@@ -297,47 +303,15 @@
   }
   const baseline = projects.map(project => ({repo:project.repo,updated:project.updated}));
   renderUpdates(baseline);
-  async function fetchJSON(url) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 7500);
-    try { const response = await fetch(url,{signal:controller.signal,headers:{Accept:'application/vnd.github+json'}}); if (!response.ok) throw new Error('GitHub unavailable'); return await response.json(); }
-    finally { clearTimeout(timer); }
+  function renderCatalogMetadata(event){
+    const state=event.detail;
+    if(Number.isInteger(state.publicCount))$('#repoCount').firstChild.textContent=String(state.publicCount);
+    renderUpdates(projects.map(project=>({repo:project.repo,updated:project.updated})));
+    $('#dataStatus').textContent=state.message+(state.time&&!state.busy&&!state.error?' · '+dateLabel(state.time):'');
+    $('#dataStatus').classList.toggle('live',state.source==='live'&&!state.error);
   }
-  function validSnapshot(value) {
-    return value && Number.isFinite(value.time) && value.time <= Date.now() + 60000 && Number.isInteger(value.repoCount) && value.repoCount >= 0 && Array.isArray(value.updates) && value.updates.every(item => projects.some(project => project.repo === item.repo) && Number.isFinite(Date.parse(item.updated)));
-  }
-  async function refreshGitHub() {
-    let cache;
-    try { cache = JSON.parse(storage.get('arpit.github.v2') || 'null'); } catch { cache = null; }
-    if (validSnapshot(cache)) {
-      $('#repoCount').firstChild.textContent = String(cache.repoCount);
-      renderUpdates(cache.updates);
-      $('#dataStatus').textContent = `Cached GitHub data · ${dateLabel(cache.time)}`;
-      if (Date.now() - cache.time < 20 * 60 * 1000) return;
-    }
-    const results = await Promise.allSettled([
-      fetchJSON(`https://api.github.com/users/${portfolio.username}`),
-      fetchJSON(`https://api.github.com/users/${portfolio.username}/repos?sort=pushed&per_page=100&type=owner`)
-    ]);
-    const profile = results[0].status === 'fulfilled' ? results[0].value : null;
-    const repos = results[1].status === 'fulfilled' && Array.isArray(results[1].value) ? results[1].value : null;
-    const count = Number.isInteger(profile?.public_repos) && profile.public_repos >= 0 ? profile.public_repos : null;
-    if (count !== null) $('#repoCount').firstChild.textContent = String(count);
-    let updates = baseline;
-    if (repos) {
-      updates = projects.map(project => {
-        const repo = repos.find(item => item.name === project.repo && item.owner?.login?.toLowerCase() === portfolio.username.toLowerCase() && item.private === false);
-        return {repo:project.repo,updated:repo && Number.isFinite(Date.parse(repo.pushed_at)) ? repo.pushed_at : project.updated};
-      });
-      renderUpdates(updates);
-    }
-    if (count !== null && repos) {
-      storage.set('arpit.github.v2', JSON.stringify({time:Date.now(),repoCount:count,updates}));
-      $('#dataStatus').textContent = `GitHub refreshed · ${dateLabel(Date.now())}`;
-      $('#dataStatus').classList.add('live');
-    } else if (count !== null || repos) $('#dataStatus').textContent = 'Partial GitHub refresh · snapshot retained where needed';
-  }
-  refreshGitHub().catch(() => { /* The labeled static snapshot remains useful offline. */ });
+  document.addEventListener('portfolio:catalog',renderCatalogMetadata);
+  document.addEventListener('portfolio:catalog-status',renderCatalogMetadata);
 
   // Small details that should never block the rest of the page.
   $('#year').textContent = new Date().getFullYear();

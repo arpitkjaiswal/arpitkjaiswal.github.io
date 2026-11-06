@@ -1,4 +1,4 @@
-import {projectCommand} from './deck-core.mjs?v=20261106-deck1';
+import {projectCommand} from './deck-core.mjs?v=20261106-ux2';
 /* Pure input interpretation. These functions never access a camera or microphone. */
 export const SCENES = Object.freeze(['reactor', 'galaxy', 'vortex', 'aurora']);
 export const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
@@ -54,18 +54,19 @@ export class PoseLatch {
   }
 }
 
-export function parseCommand(transcript, {requireWakeWord = true} = {}) {
+export function parseCommand(transcript, {requireWakeWord = true,projects=null,projectIds} = {}) {
   if (typeof transcript !== 'string' || transcript.length > 180) return null;
   let text = transcript.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g,' ').trim();
   const wake = /^(?:hey |okay |ok )?jarvis\b\s*/;
   if (requireWakeWord && !wake.test(text)) return null;
   text = text.replace(wake, '').replace(/^please /,'').replace(/ please$/,'').trim();
-  const project=projectCommand(text);if(project)return project;
+  const project=projectCommand(text,{projects,...(projectIds?{projectIds}:{})});if(project)return project;
   if (SCENES.includes(text)) return {type:'scene',scene:text};
   const scene = text.match(/^(?:show|switch to|activate|engage)(?: the)? (reactor|galaxy|vortex|aurora)(?: mode)?$/);
   if (scene) return {type:'scene',scene:scene[1]};
   const exact = {
     'mission control':{type:'deck',action:'home'},'game mode':{type:'deck',action:'home'},
+    'all projects':{type:'deck',action:'library'},'browse projects':{type:'deck',action:'library'},'show all projects':{type:'deck',action:'library'},'projects':{type:'deck',action:'library'},'open project library':{type:'deck',action:'library'},
     'classic mode':{type:'deck',action:'classic'},'classic portfolio':{type:'deck',action:'classic'},
     'next project':{type:'deck',action:'next'},'previous project':{type:'deck',action:'previous'},
     'open selected project':{type:'deck',action:'open'},'close project':{type:'deck',action:'back'},'back':{type:'deck',action:'back'},
