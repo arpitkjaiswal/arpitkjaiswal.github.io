@@ -1,5 +1,5 @@
-import {SCENES, clamp, readHands, PoseLatch, parseCommand, particleShape} from './interaction-core.mjs';
-import {HandCamera, VoiceControl, handGraphicsAvailable} from './input-controllers.mjs';
+import {SCENES, clamp, readHands, PoseLatch, parseCommand, particleShape} from './interaction-core.mjs?v=20261106-deck1';
+import {HandCamera, VoiceControl, handGraphicsAvailable} from './input-controllers.mjs?v=20261106-deck1';
 
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];

@@ -1,4 +1,4 @@
-import {projectCommand} from './deck-core.mjs';
+import {projectCommand} from './deck-core.mjs?v=20261106-deck1';
 /* Pure input interpretation. These functions never access a camera or microphone. */
 export const SCENES = Object.freeze(['reactor', 'galaxy', 'vortex', 'aurora']);
 export const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));

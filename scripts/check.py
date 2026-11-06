@@ -37,7 +37,7 @@ assert len(page.ids) == len(set(page.ids)), 'Duplicate HTML IDs.'
 for fragment in page.fragments:
     assert fragment in page.ids, f'Missing internal anchor: {fragment}'
 for asset in page.local:
-    assert (ROOT / asset).is_file(), f'Missing local file: {asset}'
+    assert (ROOT / asset.split('?',1)[0]).is_file(), f'Missing local file: {asset}'
 for file in ['script.js','projects.js',*(p.name for p in ROOT.glob('*.mjs'))]:
     subprocess.run(['node','--check',str(ROOT / file)], check=True)
 result = subprocess.run(['node','-e', "const vm=require('node:vm'),fs=require('node:fs');const s={window:{}};vm.runInNewContext(fs.readFileSync(process.argv[1],'utf8'),s);process.stdout.write(JSON.stringify(s.window.PORTFOLIO));", str(ROOT/'projects.js')], capture_output=True, text=True, check=True)

@@ -28,6 +28,8 @@ Sound always starts muted. Canvas animations pause offscreen or when the tab is 
 
 ## Edit
 
+The HTML entry points and local ES-module imports share a release query (`v=20261106-deck1`). Bump it together when changing browser code so returning visitors load a consistent release from GitHub Pages.
+
 | File | Purpose |
 | --- | --- |
 | `index.html` | Page structure, biography, contact details, and metadata |

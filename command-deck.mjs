@@ -1,7 +1,7 @@
-import './visual-studio.mjs';
-import {ExplorerProgress,moveProjectIndex,mapHandPointer} from './deck-core.mjs';
-import {particleShape} from './interaction-core.mjs';
-import {startHandNavigation} from './hand-navigation.mjs';
+import './visual-studio.mjs?v=20261106-deck1';
+import {ExplorerProgress,moveProjectIndex,mapHandPointer} from './deck-core.mjs?v=20261106-deck1';
+import {particleShape} from './interaction-core.mjs?v=20261106-deck1';
+import {startHandNavigation} from './hand-navigation.mjs?v=20261106-deck1';
 
 const $=selector=>document.querySelector(selector),$$=selector=>[...document.querySelectorAll(selector)];
 const root=document.documentElement,deck=$('#commandDeck'),map=$('#deckMap'),portals=$('#deckPortals');
