@@ -1,4 +1,4 @@
-import {projectCommand} from './deck-core.mjs?v=20261107-orbit';
+import {projectCommand} from './deck-core.mjs?v=20261107-flight';
 /* Pure input interpretation. These functions never access a camera or microphone. */
 export const SCENES = Object.freeze(['reactor', 'galaxy', 'vortex', 'aurora']);
 export const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
@@ -83,6 +83,7 @@ export function parseCommand(transcript, {requireWakeWord = true,projects=null,p
   const color=text.match(/^(?:set (?:the )?colou?r to|make it|switch to) (blue|ice|green|lime|coral|orange)$/);
   if(color)return {type:'palette',value:({blue:'ice',green:'lime',orange:'coral'}[color[1]]||color[1])};
   const natural={
+    'play signal run':{type:'deck',action:'flight'},'open signal run':{type:'deck',action:'flight'},'start signal run':{type:'deck',action:'flight'},
     'who is arpit':{type:'navigate',target:'about'},'tell me about arpit':{type:'navigate',target:'about'},'about arpit':{type:'navigate',target:'about'},
     'what can you do':{type:'help'},'help me':{type:'help'},'open jarvis':{type:'assistant'},
     'sound on':{type:'sound',enabled:true},'enable sound':{type:'sound',enabled:true},'sound off':{type:'sound',enabled:false},'mute':{type:'sound',enabled:false},

@@ -21,9 +21,22 @@
     toastTimer = setTimeout(() => node.classList.remove('visible'), 3300);
   }
 
-  // Sound is always opt-in and starts off, including return visits.
+  const soundCues = {
+    boot: { notes: [262, 392, 659, 1047], spacing: 0.075, duration: 0.32 },
+    lock: { notes: [680, 990], spacing: 0.048, duration: 0.11, level: 0.07 },
+    warp: { sweep: { from: 168, to: 54, duration: 0.44, level: 0.22 }, air: 0.4 },
+    discovery: { notes: [392, 523, 784], spacing: 0.08, duration: 0.38, air: 0.23 },
+    chapter: { notes: [440, 587], spacing: 0.055, duration: 0.22, level: 0.055 },
+    launch: { sweep: { from: 52, to: 166, duration: 0.55, level: 0.22 }, notes: [196, 392], spacing: 0.12, air: 0.54 },
+    boost: { sweep: { from: 66, to: 212, duration: 0.34, level: 0.24 }, air: 0.34 },
+    signal: { notes: [494, 740, 988], spacing: 0.065, duration: 0.28, air: 0.16 },
+    finish: { notes: [262, 392, 523, 659, 1047], spacing: 0.092, duration: 0.48, air: 0.6 },
+  };
+
+  // One opt-in audio bus for notes and procedurally synthesized effects.
   const audio = {
-    context: null, master: null, enabled: false, active: new Set(),
+    context: null, master: null, enabled: false, active: new Set(), noiseBuffer: null,
+    lastLock: -Infinity, speechActive: false,
     async toggle() {
       if (this.enabled) {
         this.enabled = false;
@@ -38,31 +51,80 @@
             this.master = this.context.createGain();
             this.master.gain.value = 0.32;
             this.master.connect(this.context.destination);
+            this.noiseBuffer = null;
           }
           await this.context.resume();
-          this.enabled = true;
-          this.tone(523.25, 0.3, 0.1);
-          this.tone(783.99, 0.4, 0.07, 0.08);
+          this.enabled = this.context.state === 'running';
+          this.cue('boot');
         } catch { this.enabled = false; toast('Sound could not start. Try the sound button again.'); }
       }
       syncSoundControls();
     },
-    tone(frequency, duration = 0.65, volume = 0.14, delay = 0) {
-      if (!this.enabled || !this.context || this.context.state !== 'running') return;
-      const ctx = this.context;
-      const oscillator = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const start = ctx.currentTime + delay;
-      oscillator.type = 'sine';
-      oscillator.frequency.value = frequency;
+    canPlay() {
+      return this.enabled && this.context?.state === 'running' && !document.hidden && !this.speechActive &&
+        $('#voiceToggle').getAttribute('aria-pressed') !== 'true';
+    },
+    envelope(source, start, duration, volume, filter) {
+      const gain = this.context.createGain();
       gain.gain.setValueAtTime(0, start);
-      gain.gain.linearRampToValueAtTime(volume, start + 0.012);
+      gain.gain.linearRampToValueAtTime(volume, start + 0.022);
       gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-      oscillator.connect(gain).connect(this.master);
-      oscillator.onended = () => { this.active.delete(oscillator); oscillator.disconnect(); gain.disconnect(); };
-      this.active.add(oscillator);
-      oscillator.start(start);
-      oscillator.stop(start + duration + 0.03);
+      if (filter) source.connect(filter).connect(gain);
+      else source.connect(gain);
+      gain.connect(this.master);
+      source.onended = () => {
+        this.active.delete(source);
+        source.disconnect();
+        filter?.disconnect();
+        gain.disconnect();
+      };
+      this.active.add(source);
+      source.start(start);
+      source.stop(start + duration + 0.025);
+    },
+    tone(frequency, duration = 0.65, volume = 0.14, delay = 0, { to = frequency, type = 'sine' } = {}) {
+      if (!this.canPlay() || this.active.size >= 28) return;
+      const oscillator = this.context.createOscillator();
+      const start = this.context.currentTime + delay;
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(frequency, start);
+      if (to !== frequency) oscillator.frequency.exponentialRampToValueAtTime(to, start + duration);
+      this.envelope(oscillator, start, duration, volume);
+    },
+    air(duration) {
+      if (!this.canPlay() || this.active.size >= 28) return;
+      const ctx = this.context;
+      if (!this.noiseBuffer) {
+        this.noiseBuffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * 0.66), ctx.sampleRate);
+        const samples = this.noiseBuffer.getChannelData(0);
+        for (let index = 0; index < samples.length; index++) samples[index] = Math.random() * 2 - 1;
+      }
+      const source = ctx.createBufferSource();
+      source.buffer = this.noiseBuffer;
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.Q.value = 0.9;
+      const start = ctx.currentTime;
+      filter.frequency.setValueAtTime(460, start);
+      filter.frequency.exponentialRampToValueAtTime(2400, start + duration * 0.36);
+      filter.frequency.exponentialRampToValueAtTime(290, start + duration);
+      this.envelope(source, start, duration, 0.16, filter);
+    },
+    cue(name) {
+      if (!Object.hasOwn(soundCues, name) || !this.canPlay()) return;
+      if (name === 'lock') {
+        const now = performance.now();
+        if (now - this.lastLock < 155) return;
+        this.lastLock = now;
+      }
+      const cue = soundCues[name];
+      if (cue.air) this.air(cue.air);
+      if (cue.sweep) {
+        const { from, to, duration, level } = cue.sweep;
+        this.tone(from, duration, level, 0, { to, type: 'triangle' });
+        this.tone(from * 2, duration * 0.8, level * 0.4, 0.02, { to: to * 2 });
+      }
+      cue.notes?.forEach((frequency, index) => this.tone(frequency, cue.duration ?? 0.3, cue.level ?? 0.1, index * cue.spacing, { type: 'triangle' }));
     },
     silence() {
       for (const oscillator of this.active) { try { oscillator.stop(); } catch { /* Already ended. */ } }
@@ -84,9 +146,18 @@
     button.disabled = true;
     try { await audio.toggle(); } finally { button.disabled = false; }
   });
+  document.addEventListener('portfolio:sfx', event => audio.cue(event.detail?.cue));
+  document.addEventListener('portfolio:speech-output', event => {
+    audio.speechActive = event.detail?.active === true;
+    if (audio.speechActive) audio.silence();
+  });
+  document.addEventListener('portfolio:voice-state', event => {
+    if (event.detail?.state === 'listening' || event.detail?.state === 'starting') audio.silence();
+  });
   document.addEventListener('click', event => {
     const target = event.target.closest('a,button');
-    if (target && !target.closest('.note-pads') && !['soundToggle','synthSoundToggle'].includes(target.id)) audio.tone(660, 0.09, 0.035);
+    if (!target || target.closest('.note-pads, .deck-portal, .flight-beacon')) return;
+    if (!['soundToggle', 'synthSoundToggle', 'deckSound', 'flightSound', 'flightLaunch', 'flightBoost', 'deckOpenTarget'].includes(target.id)) audio.tone(660, 0.09, 0.035);
   });
 
   // A small set of site-wide preferences. Nothing is required from storage.
@@ -506,7 +577,7 @@
   }
   $$('.note-pad').forEach(pad=>pad.addEventListener('click',()=>playNote(Number(pad.dataset.note))));
   document.addEventListener('keydown',event=>{if(event.repeat||event.ctrlKey||event.metaKey||event.altKey||document.querySelector('dialog[open]')||/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName)||document.activeElement?.isContentEditable)return;if(waveVisible&&/^[1-5]$/.test(event.key)){event.preventDefault();playNote(Number(event.key)-1);}});
-  document.addEventListener('visibilitychange',()=>{if(document.hidden){audio.silence();if(audio.context?.state==='running')audio.context.suspend().catch(()=>{});if(frameID)cancelAnimationFrame(frameID);frameID=0;lastFrame=0;}else{updateClock();scheduleFrame();}});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){audio.silence();if(audio.context?.state==='running')audio.context.suspend().catch(()=>{});if(frameID)cancelAnimationFrame(frameID);frameID=0;lastFrame=0;}else{if(audio.enabled&&audio.context?.state==='suspended')audio.context.resume().catch(()=>{});updateClock();scheduleFrame();}});
   document.addEventListener('portfolio:burst',()=>{burstAt=engineTime;audio.tone(392,.65,.1);audio.tone(783.99,.5,.04,.06);redraw();scheduleFrame();});
   window.addEventListener('pagehide',()=>audio.silence());
 })();

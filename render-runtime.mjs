@@ -1,4 +1,4 @@
-import {visualBudget} from './motion-core.mjs?v=20261107-orbit';
+import {visualBudget} from './motion-core.mjs?v=20261107-flight';
 const root=document.documentElement,reduced=matchMedia('(prefers-reduced-motion: reduce)');
 let mode='auto',dialogOpen=Boolean(document.querySelector('dialog[open]'));
 export function getRenderState(){return {dialogOpen,hidden:document.hidden,budget:visualBudget({width:innerWidth,reduced:reduced.matches&&root.classList.contains('motion-paused'),saveData:navigator.connection?.saveData===true,cores:navigator.hardwareConcurrency||8,memory:navigator.deviceMemory||8,mode})};}

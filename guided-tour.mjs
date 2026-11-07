@@ -1,7 +1,7 @@
-import {TourTimeline} from './tour-core.mjs?v=20261107-orbit';
-import {getProjects} from './project-catalog.mjs?v=20261107-orbit';
-import {spotlightProjects} from './catalog-core.mjs?v=20261107-orbit';
-import {sayText,cancelSpeech} from './speech-output.mjs?v=20261107-orbit';
+import {TourTimeline} from './tour-core.mjs?v=20261107-flight';
+import {getProjects} from './project-catalog.mjs?v=20261107-flight';
+import {spotlightProjects} from './catalog-core.mjs?v=20261107-flight';
+import {sayText,cancelSpeech} from './speech-output.mjs?v=20261107-flight';
 
 const $=selector=>document.querySelector(selector),root=document.documentElement,stage=$('#guidedTour');
 const timeline=new TourTimeline(),reduced=matchMedia('(prefers-reduced-motion: reduce)');
@@ -27,6 +27,7 @@ function paint(){
   $('#tourState').textContent=complete?'Tour complete · keep exploring':state.status==='paused'?'Paused · explore at your pace':'Autopilot · next chapter shortly';
   $('#tourChapters').querySelectorAll('button').forEach((button,index)=>{button.setAttribute('aria-current',String(index===state.index));button.classList.toggle('complete',index<state.index||complete);});
   $('#tourProgress').style.transform=`scaleX(${state.progress})`;
+  if(displayedId!==project.id&&!complete&&!$('#tourNarration').checked)dispatch('portfolio:sfx',{cue:'chapter'});
   if(displayedId!==project.id&&!reduced.matches&&!root.classList.contains('motion-paused')){document.querySelector('.tour-copy').animate([{opacity:.2,transform:'translate3d(0,12px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:550,easing:'cubic-bezier(.2,.8,.2,1)'});document.querySelector('.tour-art-window').animate([{opacity:.3},{opacity:1}],{duration:700});}displayedId=project.id;
   announce();narrate();
 }

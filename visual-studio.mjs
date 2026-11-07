@@ -1,10 +1,10 @@
-import './jarvis-ui.mjs?v=20261107-orbit';
-import {JarvisSession} from './jarvis-core.mjs?v=20261107-orbit';
-import {sayText,cancelSpeech,enableReplies,setSpeechHooks,isSpeaking} from './speech-output.mjs?v=20261107-orbit';
-import {FramePacer} from './motion-core.mjs?v=20261107-orbit';
-import {getRenderState} from './render-runtime.mjs?v=20261107-orbit';
-import {SCENES, clamp, readHands, PoseLatch, parseCommand, particleShape} from './interaction-core.mjs?v=20261107-orbit';
-import {HandCamera, VoiceControl, handGraphicsAvailable} from './input-controllers.mjs?v=20261107-orbit';
+import './jarvis-ui.mjs?v=20261107-flight';
+import {JarvisSession} from './jarvis-core.mjs?v=20261107-flight';
+import {sayText,cancelSpeech,enableReplies,setSpeechHooks,isSpeaking} from './speech-output.mjs?v=20261107-flight';
+import {FramePacer} from './motion-core.mjs?v=20261107-flight';
+import {getRenderState} from './render-runtime.mjs?v=20261107-flight';
+import {SCENES, clamp, readHands, PoseLatch, parseCommand, particleShape} from './interaction-core.mjs?v=20261107-flight';
+import {HandCamera, VoiceControl, handGraphicsAvailable} from './input-controllers.mjs?v=20261107-flight';
 
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
@@ -142,7 +142,7 @@ function executeCommand(text,{spoken=false,resolved=null}={}){
     case 'library':case 'search':document.dispatchEvent(new CustomEvent('portfolio:library',{detail:command.type==='search'?{query:command.query,filter:'all',sort:'featured'}:{filter:command.filter,sort:command.sort,query:''}}));reply=command.type==='search'?`Searching projects for ${command.query}.`:`Here are the ${command.filter==='all'?'latest':command.filter} projects.`;break;
     case 'assistant':document.dispatchEvent(new CustomEvent('portfolio:jarvis'));reply='Ask me to open a project, start a tour, or change the visuals.';break;
     case 'sound':if(($('#soundToggle').getAttribute('aria-pressed')==='true')!==command.enabled)$('#soundToggle').click();reply=command.enabled?'Interface sound enabled.':'Sound muted.';break;
-    case 'deck':document.dispatchEvent(new CustomEvent('portfolio:deck',{detail:{action:command.action}}));reply='Interface updated.';break;
+    case 'deck':document.dispatchEvent(new CustomEvent('portfolio:deck',{detail:{action:command.action}}));reply=command.action==='flight'?'Opening Signal Run. Select Launch run when you’re ready.':'Interface updated.';break;
     case 'scroll':{const scroller=document.querySelector('dialog[open]')||(root.classList.contains('deck-mode')?document.querySelector('#deckMap'):document.scrollingElement);scroller?.scrollBy({top:command.direction*innerHeight*.55,behavior:paused?'instant':'smooth'});reply='Scrolling.';break;}
     case 'scene':setScene(command.scene,{source:spoken?'voice':'manual'});reply=`${command.scene} engaged.`;break;
     case 'next':nextScene(1,spoken?'voice':'manual');reply=`${scene} engaged.`;break;

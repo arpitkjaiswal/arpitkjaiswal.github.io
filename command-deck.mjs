@@ -1,13 +1,13 @@
-import './guided-tour.mjs?v=20261107-orbit';
-import {getRenderState} from './render-runtime.mjs?v=20261107-orbit';
-import {FramePacer,DrawBudget} from './motion-core.mjs?v=20261107-orbit';
-import './project-library.mjs?v=20261107-orbit';
-import {getProjects} from './project-catalog.mjs?v=20261107-orbit';
-import {spotlightProjects} from './catalog-core.mjs?v=20261107-orbit';
-import './visual-studio.mjs?v=20261107-orbit';
-import {ExplorerProgress,moveProjectIndex,mapHandPointer} from './deck-core.mjs?v=20261107-orbit';
-import {particleShape} from './interaction-core.mjs?v=20261107-orbit';
-import {startHandNavigation} from './hand-navigation.mjs?v=20261107-orbit';
+import './guided-tour.mjs?v=20261107-flight';
+import {getRenderState} from './render-runtime.mjs?v=20261107-flight';
+import {FramePacer,DrawBudget} from './motion-core.mjs?v=20261107-flight';
+import './project-library.mjs?v=20261107-flight';
+import {getProjects} from './project-catalog.mjs?v=20261107-flight';
+import {spotlightProjects} from './catalog-core.mjs?v=20261107-flight';
+import './visual-studio.mjs?v=20261107-flight';
+import {ExplorerProgress,moveProjectIndex,mapHandPointer} from './deck-core.mjs?v=20261107-flight';
+import {particleShape} from './interaction-core.mjs?v=20261107-flight';
+import {startHandNavigation} from './hand-navigation.mjs?v=20261107-flight';
 
 const $=selector=>document.querySelector(selector),$$=selector=>[...document.querySelectorAll(selector)];
 const root=document.documentElement,deck=$('#commandDeck'),map=$('#deckMap'),portals=$('#deckPortals');
@@ -18,6 +18,7 @@ const info=$('#deckInfoDialog'),preview=$('#cameraPreview'),previewHome=preview.
 const progress=new ExplorerProgress(getProjects().map(p=>p.id));
 const positions=[[19,17],[51,10],[82,21],[13,46],[83,48],[48,50],[23,77],[52,85],[81,77]];
 let active=false,selected=0,lastInteraction=performance.now(),activeCamera=false;
+let flightLoading=false;
 let renderedProject=null,mapGeometry={x:0,y:0,width:1,height:1},adaptiveEco=false,budget=getRenderState().budget;
 const pacer=new FramePacer(budget.fps),drawBudget=new DrawBudget();
 const canRender=()=>active&&!document.hidden&&!getRenderState().dialogOpen;
@@ -30,6 +31,24 @@ const sceneNames=['reactor','galaxy','vortex','aurora'];
 const shapes=Object.fromEntries(sceneNames.map(name=>[name,Array.from({length:640},(_,i)=>particleShape(i,640,name))]));
 function say(message){if($('#deckTransmission').textContent!==message)$('#deckTransmission').textContent=message;}
 function dispatch(name,detail){return document.dispatchEvent(new CustomEvent(name,{detail}));}
+function effectsAllowed(){return !paused&&!matchMedia('(prefers-reduced-motion: reduce)').matches;}
+async function openFlight(){
+  if(flightLoading||$('#flightDialog').open)return;
+  if(!active)activate();
+  const trigger=$('#deckFlight');
+  flightLoading=true;
+  trigger.setAttribute('aria-busy','true');
+  try{
+    const {showSignalRun}=await import('./signal-run.mjs?v=20261107-flight');
+    if(active)showSignalRun(projects,()=>getRenderState().budget);
+  }catch(error){
+    say('Signal Run could not load. Try the flight button again.');
+    console.error('Signal Run failed to open',error);
+  }finally{
+    flightLoading=false;
+    trigger.removeAttribute('aria-busy');
+  }
+}
 function command(text){lastInteraction=performance.now();return document.dispatchEvent(new CustomEvent('portfolio:execute',{cancelable:true,detail:{text}}));}
 function projectById(id){return getProjects().find(project=>project.id===id);}
 function destination(id,kind){
@@ -65,6 +84,10 @@ function setTarget(index,{source='manual',focus=false}={}){
   $$('.deck-portal').forEach((button,i)=>{button.classList.toggle('selected',i===selected);button.setAttribute('aria-pressed',String(i===selected));});
   const box=$('#deckPreview');box.style.setProperty('--project-color',project.color);
   box.innerHTML=`${project.art?`<img class="deck-preview-art" src="${project.art}" width="720" height="440" alt="Illustrative artwork for ${escape(project.name)}">`:`<div class="deck-preview-symbol" aria-hidden="true">${project.symbol}</div>`}<h3>${escape(project.name)}</h3><p class="deck-preview-stage">${escape(project.stage)}</p><p class="deck-preview-description">${escape(project.description)}</p><div class="deck-preview-tags">${project.tags.map(tag=>`<span>${escape(tag)}</span>`).join('')}</div>`;
+  if(source!=='auto'){
+    dispatch('portfolio:sfx',{cue:'lock'});
+    if(effectsAllowed())box.animate?.([{opacity:.55,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:210,easing:'ease-out'});
+  }
   $('#deckOpenTarget').dataset.handAction=`project:${project.id}`;
   $('#deckOpenTarget').setAttribute('aria-label',`Open ${project.name}`);
   const next=project.categories.includes('systems')?'reactor':project.categories.includes('play')?'vortex':project.categories.includes('web')?'aurora':'galaxy';
@@ -111,7 +134,7 @@ function showInfo(kind){
   const text={
     about:{title:'The human behind the interface.',body:'<p>I’m <strong>Arpit Kumar Jaiswal</strong>, a B.Tech Information Technology student at MIT Manipal. I build backends, AI experiments, and interfaces with a little personality.</p><p>This universe brings together selected projects and a live library from my GitHub: voice companions, encrypted data, document research, web workspaces, and an orbital-defense game.</p><p>My process is simple: ask a good question, build something, find its limits, and make it better.</p><div class="deck-modal-links"><a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener noreferrer" data-hand-action="external:github">GitHub ↗</a><a href="#home" data-hand-action="nav:home">Classic portfolio ↗</a></div>'},
     contact:{title:'Open a connection.',body:'<p>Have a project, an opportunity, or a good question? Say hello.</p><div class="deck-modal-links"><a href="mailto:arpit.kr.jaiswal@gmail.com" data-hand-action="external:email">arpit.kr.jaiswal@gmail.com ↗</a><a href="https://www.linkedin.com/in/arpit-kumar-jaiswal-819478302" target="_blank" rel="noopener noreferrer" data-hand-action="external:linkedin">LinkedIn ↗</a><a href="https://github.com/arpitkjaiswal" target="_blank" rel="noopener noreferrer" data-hand-action="external:github">GitHub ↗</a></div>'},
-    help:{title:'You have the controls.',body:'<p>Click <strong>Enable camera</strong> and allow browser permission. Raise an open hand; your index finger becomes the cursor. Point at a project, then briefly hold a <strong>thumb + index pinch</strong> to open it. Release before selecting again.</p><div class="deck-help-grid"><div><h3>Hands &amp; keyboard</h3><dl><div><dt>Point, then pinch</dt><dd>Select a portal, navigation item, or project button.</dd></div><div><dt>Open palm near a screen edge</dt><dd>Scroll a long project file or narrow map.</dd></div><div><dt>Peace sign · hold</dt><dd>Target the next project.</dd></div><div><dt>WASD / arrows · Enter</dt><dd>Move between portals anywhere on the deck, then open the target.</dd></div><div><dt>1–9 · / · Space</dt><dd>Quick-open a spotlight project, search all projects, or send an energy pulse.</dd></div><div><dt>Escape · ?</dt><dd>Close a panel; stop active inputs from the deck. Press ? for this guide.</dd></div></dl></div><div><h3>Say “Jarvis”, then…</h3><button data-deck-command="open LEXA" data-hand-action="execute:open LEXA">open LEXA</button><button data-deck-command="open project two" data-hand-action="execute:open project two">open project two</button><button data-deck-command="next project" data-hand-action="execute:next project">next project</button><button data-deck-command="open selected project" data-hand-action="execute:open selected project">open selected project</button><button data-deck-command="change color" data-hand-action="execute:change color">change color</button><button data-deck-command="close project" data-hand-action="execute:close project">close project</button><button data-deck-command="stop all inputs" data-hand-action="execute:stop all inputs">stop all inputs</button><p>Choose Talk to Jarvis for one-shot listening (no wake word needed) or optional hands-free mode. Type the same commands in the command box. Say “all projects” to search the full GitHub library. “Play Orbit Warden” launches its browser game; “source for LEXA” opens its code. Camera navigation uses this page’s controls only.</p></div></div><p>Camera and microphone require permission and compatible browser features. Hand tracking runs on your device; voice recognition may use your browser’s speech service. Neither input starts automatically.</p>'}
+    help:{title:'You have the controls.',body:'<p>Choose a project, take the guided tour, or select <strong>Play Signal Run</strong> for the flight game. For hand control, click <strong>Enable camera</strong> and allow browser permission. Raise an open hand; your index finger becomes the cursor. Point at a project, then briefly hold a <strong>thumb + index pinch</strong> to open it. Release before selecting again.</p><div class="deck-help-grid"><div><h3>Hands &amp; keyboard</h3><dl><div><dt>Point, then pinch</dt><dd>Select a portal, navigation item, or project button.</dd></div><div><dt>Open palm near a screen edge</dt><dd>Scroll a long project file or narrow map.</dd></div><div><dt>Peace sign · hold</dt><dd>Target the next project.</dd></div><div><dt>WASD / arrows · Enter</dt><dd>Move between portals anywhere on the deck, then open the target.</dd></div><div><dt>1–9 · / · Space</dt><dd>Quick-open a spotlight project, search all projects, or send an energy pulse.</dd></div><div><dt>Escape · ?</dt><dd>Close a panel; stop active inputs from the deck. Press ? for this guide.</dd></div></dl></div><div><h3>Say “Jarvis”, then…</h3><button data-deck-command="open LEXA" data-hand-action="execute:open LEXA">open LEXA</button><button data-deck-command="open project two" data-hand-action="execute:open project two">open project two</button><button data-deck-command="next project" data-hand-action="execute:next project">next project</button><button data-deck-command="open selected project" data-hand-action="execute:open selected project">open selected project</button><button data-deck-command="change color" data-hand-action="execute:change color">change color</button><button data-deck-command="close project" data-hand-action="execute:close project">close project</button><button data-deck-command="stop all inputs" data-hand-action="execute:stop all inputs">stop all inputs</button><p>Choose Talk to Jarvis for one-shot listening (no wake word needed) or optional hands-free mode. Type the same commands in the command box. Say “all projects” to search the full GitHub library. “Play Orbit Warden” launches its browser game; “source for LEXA” opens its code. Camera navigation uses this page’s controls only.</p></div></div><p>Camera and microphone require permission and compatible browser features. Hand tracking runs on your device; voice recognition may use your browser’s speech service. Neither input starts automatically.</p>'}
   }[kind];if(!text)return;
   $('#deckInfoTitle').textContent=text.title;content.innerHTML=text.body;
   $$('[data-deck-command]').forEach(button=>button.addEventListener('click',()=>command(button.dataset.deckCommand)));
@@ -119,6 +142,7 @@ function showInfo(kind){
 }
 function deckAction(action){
   if(action==='classic'){navigateClassic();return;}
+  if(action==='flight'){openFlight();return;}
   if(action==='library'){dispatch('portfolio:library',{filter:'all',query:''});return;}
   if(action==='back'){
     const dialog=document.querySelector('dialog[open]');if(dialog){dialog.close();say('Back to the constellation.');}else if(!active)activate();
@@ -150,7 +174,8 @@ try{$('#deckCoach').hidden=sessionStorage.getItem('arpit.coach.v2')==='dismissed
 $('#deckStopInputs').addEventListener('click',()=>command('stop all inputs'));
 $('#deckDismissInput').addEventListener('click',()=>$('#deckInputTray').hidden=true);
 $('#deckTour').addEventListener('click',()=>dispatch('portfolio:tour',{action:'toggle'}));
-document.addEventListener('portfolio:tour-state',event=>{const on=event.detail?.status!=='off';$('#deckTour').setAttribute('aria-pressed',String(on));$('#deckTour').textContent=on?'Exit tour':'Start tour ↗';});
+$('#deckFlight').addEventListener('click',openFlight);
+document.addEventListener('portfolio:tour-state',event=>{const on=event.detail?.status!=='off';$('#deckTour').setAttribute('aria-pressed',String(on));$('[data-tour-label]').textContent=on?'Exit tour':'Guided tour';});
 document.addEventListener('portfolio:tour-target',event=>{const index=projects.findIndex(project=>project.id===event.detail?.id);if(index>=0)setTarget(index,{source:'auto'});});
 const proxies={deckCamera:'cameraToggle',deckVoice:'voiceToggle',deckSound:'soundToggle',deckPause:'motionToggle',deckPalette:'paletteToggle'};
 for(const [button,target] of Object.entries(proxies))$('#'+button).addEventListener('click',()=>{
@@ -165,7 +190,9 @@ function syncControls(){
     button.setAttribute('aria-pressed',String(on));button.disabled=source.disabled;$('#'+proxy+' span').textContent=source.querySelector('span').textContent;
   }
   $('#deckSound').setAttribute('aria-pressed',$('#soundToggle').getAttribute('aria-pressed'));$('#deckSound').disabled=$('#soundToggle').disabled;
-  $('#deckSound').setAttribute('aria-label',$('#soundToggle').getAttribute('aria-pressed')==='true'?'Mute interface sound':'Enable interface sound');
+  const soundOn=$('#soundToggle').getAttribute('aria-pressed')==='true';
+  $('#deckSound').setAttribute('aria-label',soundOn?'Mute interface sound':'Enable interface sound');
+  $('#deckSound span').textContent=soundOn?'Sound on':'Sound off';
   const held=root.classList.contains('motion-paused');$('#deckPause span').textContent=held?'Resume':'Pause';$('#deckPause use').setAttribute('href',held?'#i-play':'#i-pause');$('#deckPause').setAttribute('aria-pressed',String(held));$('#deckPause').setAttribute('aria-label',held?'Resume animations':'Pause animations');
   activeCamera=$('#cameraToggle').getAttribute('aria-pressed')==='true';
   if(activeCamera)$('#deckCamera').dataset.handAction='control:stop-camera';else delete $('#deckCamera').dataset.handAction;
@@ -189,17 +216,32 @@ document.addEventListener('portfolio:deck',event=>deckAction(event.detail?.actio
 document.addEventListener('portfolio:scene',event=>{
   if(!active||!sceneNames.includes(event.detail?.scene))return;
   const next=event.detail.scene;if(next!==scene){previousScene=scene;scene=next;morphAt=clock;}
-  $('#deckMapHint').textContent=`${next.toUpperCase()} FIELD / POINT. PINCH. EXPLORE.`;draw();schedule();
+  $('#deckMapHint').textContent=`${next[0].toUpperCase()}${next.slice(1)} field`;draw();schedule();
 });
 document.addEventListener('portfolio:destination',event=>visitDestination(event.detail?.id,event.detail?.kind));
 document.addEventListener('portfolio:navigate',event=>{if(active){event.preventDefault();navigate(event.detail?.target);}});
 document.addEventListener('portfolio:project-opened',event=>{
   const id=event.detail?.id,project=projectById(id);if(!project)return;
-  const spotlightIndex=projects.indexOf(project);if(spotlightIndex>=0)setTarget(spotlightIndex);
+  const spotlightIndex=projects.indexOf(project);if(spotlightIndex>=0)setTarget(spotlightIndex,{source:'auto'});
   const record=progress.visit(id);showProgress();
   const meta=document.createElement('p');meta.className='deck-dossier-meta';meta.textContent=`PROJECT / ${project.name} · ${record.count}/${record.total} DISCOVERED${record.fresh?' · +100 EXPLORER XP':''}`;
   $('#projectDialogContent').prepend(meta);
-  if(record.fresh){say(`DISCOVERY +100 XP / ${project.name}. ${record.count} of ${record.total} builds explored.`);dispatch('portfolio:burst');}
+  if(active){
+    dispatch('portfolio:sfx',{cue:'warp'});
+    if(record.fresh)dispatch('portfolio:sfx',{cue:'discovery'});
+    if(effectsAllowed()){
+      $('.dossier-warp').animate?.([
+        {opacity:0,transform:'scale(.93) translateY(-12px)'},
+        {opacity:.8,offset:.22},
+        {opacity:0,transform:'scale(1.18) translateY(24px)'}
+      ],{duration:530,easing:'cubic-bezier(.15,.6,.2,1)'});
+      $('#projectDialogContent').animate?.([{opacity:.68},{opacity:1}],{duration:360,easing:'ease-out'});
+    }
+  }
+  if(record.fresh){
+    say(`DISCOVERY +100 XP / ${project.name}. ${record.count} of ${record.total} builds explored.`);
+    if(!active)dispatch('portfolio:burst');
+  }
 });
 const external={github:'https://github.com/arpitkjaiswal',linkedin:'https://www.linkedin.com/in/arpit-kumar-jaiswal-819478302',email:'mailto:arpit.kr.jaiswal@gmail.com'};
 function activateHandAction(action,element){
@@ -214,13 +256,14 @@ function activateHandAction(action,element){
     else if(value==='map')deckAction('home');else if(value==='lab')navigateClassic('playground');else if(value==='help')showInfo('help');
   }
   else if(kind==='execute')command(value);
+  else if(kind==='flight'&&value==='press'&&element.closest('#flightDialog'))element.click();
   else if(kind==='tour'){if(value==='stop')$('#tourExit').click();else if(value==='toggle-play')$('#tourPlay').click();else if(value.startsWith('chapter:'))$('#tourChapters').children[Number(value.split(':')[1])]?.click();else dispatch('portfolio:tour',{action:value});}
   else if(kind==='library-filter'&&['all','featured','ai','systems','web','play'].includes(value))$(`[data-library-filter="${value}"]`)?.click();
   else if(kind==='filter'&&['all','ai','systems','web','play'].includes(value))$(`[data-filter="${value}"]`)?.click();
   else if(kind==='scene'&&sceneNames.includes(value))$(`[data-scene="${value}"]`)?.click();
   else if(kind==='external'&&external[value])location.assign(external[value]);
   else if(kind==='control'){
-    const controls={sound:'soundToggle',pause:'motionToggle',palette:'paletteToggle',stop:'stopAllInputs','stop-camera':'cameraToggle','stop-voice':'voiceToggle',burst:'energyBurst',refresh:'libraryRefresh',tour:'deckTour','jarvis-listen':'jarvisListen'};
+    const controls={sound:'soundToggle',pause:'motionToggle',palette:'paletteToggle',stop:'stopAllInputs','stop-camera':'cameraToggle','stop-voice':'voiceToggle',burst:'energyBurst',refresh:'libraryRefresh',tour:'deckTour',flight:'deckFlight','jarvis-listen':'jarvisListen'};
     if(controls[value])$('#'+controls[value])?.click();
   }
 }

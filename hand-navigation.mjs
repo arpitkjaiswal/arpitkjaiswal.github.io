@@ -1,4 +1,4 @@
-import {mapHandPointer,PinchSelector} from './deck-core.mjs?v=20261107-orbit';
+import {mapHandPointer,PinchSelector} from './deck-core.mjs?v=20261107-flight';
 
 /* Hand events come from the existing opt-in tracker. This controls only marked,
    visible portfolio actions. It never moves the OS cursor or synthesizes keys. */

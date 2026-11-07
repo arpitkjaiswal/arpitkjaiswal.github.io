@@ -1,5 +1,5 @@
-import {getProjects,getCatalogState,refreshCatalog} from './project-catalog.mjs?v=20261107-orbit';
-import {filterCatalog} from './catalog-core.mjs?v=20261107-orbit';
+import {getProjects,getCatalogState,refreshCatalog} from './project-catalog.mjs?v=20261107-flight';
+import {filterCatalog} from './catalog-core.mjs?v=20261107-flight';
 
 const $=selector=>document.querySelector(selector),dialog=$('#projectLibrary'),grid=$('#libraryGrid');
 const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

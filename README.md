@@ -29,7 +29,7 @@ Sound always starts muted. Canvas work is suspended behind native dialogs and wh
 
 ## Edit
 
-The HTML entry points and local ES-module imports share a release query (`v=20261107-orbit`). Bump it together when changing browser code so returning visitors load a consistent release from GitHub Pages.
+The HTML entry points and local ES-module imports share a release query (`v=20261107-flight`). Bump it together when changing browser code so returning visitors load a consistent release from GitHub Pages.
 
 | File | Purpose |
 | --- | --- |
@@ -105,6 +105,12 @@ All 54 Node tests passed, including project aliases and wake-word boundaries, mi
 The managed browser exercised the command deck at 320, 390, and 768 px widths and compact 568 px heights, project clicks, typed project commands, global keyboard selection, unique XP, search/empty/reset states, category filters, sorting, raw GitHub project files, sound/mute, pause/resume, and classic navigation. A temporary same-origin fixture sent explicitly simulated hand events through the real page: point and pinch opened LEXA, a held pinch over the modal close button did not close it, releasing and pinching closed it, and tracking loss hid the cursor. A simulated new featured repository appeared automatically in the spotlight and library. A simulated SpeechRecognition lifecycle exercised enable, transcript handling, Escape stop, microphone-denial messaging, and ignored late transcripts. Native fullscreen was rejected by the managed browser, so the rejection feedback was verified. These integration checks do not establish physical tracking or microphone accuracy.
 
 The managed browser rendered the four scenes and exercised typed commands, animation pause/resume, expanded view, and fallback controls. The SDK, WASM, and model downloaded during a runtime check, but inference could not complete because that browser could not create a WebGL context. Physical camera landmarks and live microphone transcription still need verification on the target Mac. The interface reports unavailable graphics, denied/busy/missing hardware, unsupported speech, and network errors without claiming an active connection.
+
+## Signal Run
+
+Choose **Play Signal Run** from the deck. Steer with arrows, WASD, or a tap on the field. Select the current beacon for flight assist. Press **B** or use **Boost**, then let the charge meter refill. Recover the three signals to open their project files and save a best time in this browser. The run pauses when the page is hidden.
+
+Sound starts off. Turn it on in the deck or the flight panel to hear synthesized launch, boost, recovery, and warp cues. Effects pause during microphone capture and spoken replies. The game loads on demand and honors reduced motion for its decorative effects.
 
 ## November 2026 Jarvis and rendering checks
 
