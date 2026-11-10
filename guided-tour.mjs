@@ -1,7 +1,7 @@
-import {TourTimeline} from './tour-core.mjs?v=20261107-flight';
-import {getProjects} from './project-catalog.mjs?v=20261107-flight';
-import {spotlightProjects} from './catalog-core.mjs?v=20261107-flight';
-import {sayText,cancelSpeech} from './speech-output.mjs?v=20261107-flight';
+import {TourTimeline} from './tour-core.mjs?v=20261110-layout';
+import {getProjects} from './project-catalog.mjs?v=20261110-layout';
+import {spotlightProjects} from './catalog-core.mjs?v=20261110-layout';
+import {sayText,cancelSpeech} from './speech-output.mjs?v=20261110-layout';
 
 const $=selector=>document.querySelector(selector),root=document.documentElement,stage=$('#guidedTour');
 const timeline=new TourTimeline(),reduced=matchMedia('(prefers-reduced-motion: reduce)');

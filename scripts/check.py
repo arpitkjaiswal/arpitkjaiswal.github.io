@@ -42,7 +42,7 @@ for file in [*(p.name for p in ROOT.glob('*.js')),*(p.name for p in ROOT.glob('*
     subprocess.run(['node','--check',str(ROOT / file)], check=True)
     for local in re.findall(r"(?:from\s+|import\s*(?:\(\s*)?)['\"](\./[^'\"]+)['\"]",(ROOT/file).read_text()):
         assert (ROOT/local.split('?',1)[0]).is_file(), f'Missing module: {local}'
-        assert '?v=20261107-flight' in local, f'Mixed release in {file}: {local}'
+        assert '?v=20261110-layout' in local, f'Mixed release in {file}: {local}'
 result = subprocess.run(['node','-e', "const vm=require('node:vm'),fs=require('node:fs');const s={window:{}};vm.runInNewContext(fs.readFileSync(process.argv[1],'utf8'),s);process.stdout.write(JSON.stringify(s.window.PORTFOLIO));", str(ROOT/'projects.js')], capture_output=True, text=True, check=True)
 data = json.loads(result.stdout)
 ids = set()

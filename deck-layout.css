@@ -1,0 +1,85 @@
+/* Keep the deck, tour, and sensor status in distinct grid rows. */
+.command-deck {
+  height: 100dvh;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+}
+
+.deck-header {
+  grid-row: 1;
+  min-height: 68px;
+  padding-block: 10px;
+  flex-wrap: wrap;
+}
+
+.deck-sensors, .deck-mobile-nav { min-width: 0; flex-wrap: wrap; }
+.deck-layout, .guided-tour { grid-area: 2 / 1; }
+.deck-rail { min-height: 0; overflow: auto; scrollbar-width: thin; }
+.deck-map-heading, .deck-map-footer { flex-wrap: wrap; }
+
+/* The background connects the cards, while the grid owns their spacing. */
+.deck-map { overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.deck-portals {
+  --portal-columns: 3;
+  position: relative;
+  inset: auto;
+  display: grid;
+  grid-template-columns: repeat(var(--portal-columns), minmax(0, 1fr));
+  align-items: center;
+  justify-items: center;
+  gap: clamp(10px, 1.4vw, 22px);
+  min-height: 100%;
+  padding: 12px 8px;
+}
+
+.deck-portal { position: relative; width: 100%; max-width: 192px; height: auto; transform: none; }
+.deck-map-orbits { position: absolute; inset: 8px; width: auto; aspect-ratio: auto; transform: none; overflow: clip; }
+
+.tour-mode .deck-layout { display: none; }
+.guided-tour { position: relative; inset: auto; padding: clamp(10px, 2.2vh, 26px) 0; }
+.tour-main { align-items: safe center; }
+.tour-controls { flex-wrap: wrap; }
+
+.deck-input-tray {
+  grid-row: 3;
+  display: flex;
+  min-width: 0;
+  margin: 0 0 8px;
+  flex-wrap: wrap;
+}
+
+.deck-input-copy { flex: 1 1 145px; min-width: 0; overflow-wrap: anywhere; }
+.deck-camera-dock { position: static; max-width: none; flex: none; }
+.deck-camera-dock:not(:has(.camera-preview:not([hidden]))) { display: none; }
+.deck-camera-dock > .camera-preview { width: 84px; height: 63px; box-shadow: none; }
+.deck-mode .input-beacon { display: none; }
+
+.deck-bottom { grid-row: 4; min-height: 64px; padding-block: 9px; }
+.deck-privacy { grid-row: 5; padding-block: 5px; }
+
+@media (max-width: 800px), (max-height: 660px) {
+  .deck-mode body { height: auto; overflow: visible; }
+  .command-deck { height: auto; min-height: 100dvh; grid-template-rows: auto minmax(min-content, 1fr) auto auto auto; }
+  .deck-map { flex: 1 0 auto; }
+  .deck-portals { min-height: 0; }
+  .deck-scan { max-height: none; }
+  .tour-main { flex: none; overflow: visible; }
+}
+
+@media (max-width: 800px) {
+  .deck-bottom { min-height: 0; grid-template-rows: auto auto; }
+  .deck-transmission { max-height: none; }
+}
+
+@media (max-width: 540px) {
+  .deck-portals { --portal-columns: 2; padding-inline: 3px; }
+  .deck-portal { max-width: none; }
+  .tour-main { flex-direction: column; justify-content: start; }
+  .tour-art-frame { order: -1; }
+  .tour-topline { flex-wrap: wrap; }
+}
+
+@media (max-width: 300px) {
+  .flight-header { flex-wrap: wrap; }
+  .flight-header h2 { white-space: normal; }
+}

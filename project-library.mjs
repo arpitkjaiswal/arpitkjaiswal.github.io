@@ -1,5 +1,5 @@
-import {getProjects,getCatalogState,refreshCatalog} from './project-catalog.mjs?v=20261107-flight';
-import {filterCatalog} from './catalog-core.mjs?v=20261107-flight';
+import {getProjects,getCatalogState,refreshCatalog} from './project-catalog.mjs?v=20261110-layout';
+import {filterCatalog} from './catalog-core.mjs?v=20261110-layout';
 
 const $=selector=>document.querySelector(selector),dialog=$('#projectLibrary'),grid=$('#libraryGrid');
 const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

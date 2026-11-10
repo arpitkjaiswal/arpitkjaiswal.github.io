@@ -1,13 +1,13 @@
-import './guided-tour.mjs?v=20261107-flight';
-import {getRenderState} from './render-runtime.mjs?v=20261107-flight';
-import {FramePacer,DrawBudget} from './motion-core.mjs?v=20261107-flight';
-import './project-library.mjs?v=20261107-flight';
-import {getProjects} from './project-catalog.mjs?v=20261107-flight';
-import {spotlightProjects} from './catalog-core.mjs?v=20261107-flight';
-import './visual-studio.mjs?v=20261107-flight';
-import {ExplorerProgress,moveProjectIndex,mapHandPointer} from './deck-core.mjs?v=20261107-flight';
-import {particleShape} from './interaction-core.mjs?v=20261107-flight';
-import {startHandNavigation} from './hand-navigation.mjs?v=20261107-flight';
+import './guided-tour.mjs?v=20261110-layout';
+import {getRenderState} from './render-runtime.mjs?v=20261110-layout';
+import {FramePacer,DrawBudget} from './motion-core.mjs?v=20261110-layout';
+import './project-library.mjs?v=20261110-layout';
+import {getProjects} from './project-catalog.mjs?v=20261110-layout';
+import {spotlightProjects} from './catalog-core.mjs?v=20261110-layout';
+import './visual-studio.mjs?v=20261110-layout';
+import {ExplorerProgress,moveProjectIndex,mapHandPointer} from './deck-core.mjs?v=20261110-layout';
+import {particleShape} from './interaction-core.mjs?v=20261110-layout';
+import {startHandNavigation} from './hand-navigation.mjs?v=20261110-layout';
 
 const $=selector=>document.querySelector(selector),$$=selector=>[...document.querySelectorAll(selector)];
 const root=document.documentElement,deck=$('#commandDeck'),map=$('#deckMap'),portals=$('#deckPortals');
@@ -16,7 +16,6 @@ window.PORTFOLIO_SPOTLIGHT=projects.map(p=>p.id);
 const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const info=$('#deckInfoDialog'),preview=$('#cameraPreview'),previewHome=preview.parentElement,previewNext=preview.nextSibling;
 const progress=new ExplorerProgress(getProjects().map(p=>p.id));
-const positions=[[19,17],[51,10],[82,21],[13,46],[83,48],[48,50],[23,77],[52,85],[81,77]];
 let active=false,selected=0,lastInteraction=performance.now(),activeCamera=false;
 let flightLoading=false;
 let renderedProject=null,mapGeometry={x:0,y:0,width:1,height:1},adaptiveEco=false,budget=getRenderState().budget;
@@ -39,7 +38,7 @@ async function openFlight(){
   flightLoading=true;
   trigger.setAttribute('aria-busy','true');
   try{
-    const {showSignalRun}=await import('./signal-run.mjs?v=20261107-flight');
+    const {showSignalRun}=await import('./signal-run.mjs?v=20261110-layout');
     if(active)showSignalRun(projects,()=>getRenderState().budget);
   }catch(error){
     say('Signal Run could not load. Try the flight button again.');
@@ -101,7 +100,6 @@ projects.forEach((project,index)=>{
   const button=document.createElement('button');button.type='button';button.className='deck-portal';button.dataset.deckProject=project.id;
   button.dataset.handAction=`project:${project.id}`;button.setAttribute('aria-label',`Open project ${index+1}, ${project.name}`);
   button.style.setProperty('--portal-color',project.color);button.style.setProperty('--portal-index',index);
-  button.style.left=`${positions[index][0]}%`;button.style.top=`clamp(52px,${positions[index][1]}%,calc(100% - 52px))`;
   button.innerHTML=`<span class="deck-portal-top"><span>${project.featured?'FEATURED':'BUILD'} / ${String(index+1).padStart(2,'0')}</span><i></i></span><h3>${escape(project.id==='documentanalyser'?'Document Analyser':project.name)}</h3><p>${escape(project.category.toUpperCase())}</p><span class="portal-visited" aria-label="Discovered">✓</span>`;
   button.addEventListener('pointerenter',()=>setTarget(index));button.addEventListener('focus',()=>setTarget(index));
   button.addEventListener('click',()=>{setTarget(index);openProject(project.id);});portals.appendChild(button);
@@ -118,6 +116,7 @@ function activate({changeHash=true}={}){
   dispatch('portfolio:exitStudio');$$('dialog[open]').forEach(dialog=>dialog.close());
   active=true;deck.hidden=false;root.classList.add('deck-mode');
   $('#deckCameraDock').appendChild(preview);
+  updateInputTray();
   if(changeHash&&location.hash!=='#deck')location.hash='#deck';
   window.scrollTo(0,0);dispatch('portfolio:mode',{deck:true});resize();schedule();
 }
@@ -207,6 +206,7 @@ function updateInputTray(prefer){
   const message=prefer==='camera'?$('#cameraStatus').textContent:prefer==='voice'?$('#voiceStatus').textContent:cameraOn?$('#cameraStatus').textContent:voiceOn?$('#voiceStatus').textContent:'Inputs off. Click a project or press / to search.';
   if($('#deckInputMode').textContent!==mode)$('#deckInputMode').textContent=mode;
   if($('#deckInputMessage').textContent!==message)$('#deckInputMessage').textContent=message;
+  if(active&&(cameraOn||voiceOn))$('#deckInputTray').hidden=false;
   $('#deckStopInputs').hidden=!cameraOn&&!voiceOn;$('#deckDismissInput').hidden=cameraOn||voiceOn;
 }
 let inputTrayFrame=0;
@@ -290,7 +290,7 @@ document.addEventListener('keydown',event=>{
   if(event.target.closest('input,textarea,select,[contenteditable="true"]'))return;
   if(event.key==='?'){event.preventDefault();showInfo('help');return;}
   if(/^[1-9]$/.test(event.key)&&!event.repeat){const index=Number(event.key)-1;if(index<projects.length){event.preventDefault();setTarget(index);openProject(projects[index].id);}return;}
-  const next=moveProjectIndex(selected,event.key,projects.length,matchMedia('(max-width:540px)').matches?2:3);
+  const next=moveProjectIndex(selected,event.key,projects.length,Number(getComputedStyle(portals).getPropertyValue('--portal-columns'))||3);
   if(next!==selected){event.preventDefault();setTarget(next,{focus:true});return;}
   if(event.key==='Enter'&&event.target===map){event.preventDefault();if(projects[selected])openProject(projects[selected].id);}
   if(event.key===' '&&!event.target.closest('button,a')){event.preventDefault();dispatch('portfolio:burst');say('Signal sent. Keep exploring.');}
@@ -307,7 +307,8 @@ function route(){const wantsDeck=!location.hash||location.hash==='#deck';if(want
 window.addEventListener('hashchange',route);
 
 function cacheAnchors(){
-  const origin=deck.getBoundingClientRect(),mapRect=map.getBoundingClientRect();
+  const field=root.classList.contains('tour-mode')?$('#guidedTour'):map;
+  const origin=deck.getBoundingClientRect(),mapRect=field.getBoundingClientRect();
   mapGeometry={x:mapRect.left-origin.left,y:mapRect.top-origin.top,width:Math.max(1,mapRect.width),height:Math.max(1,mapRect.height)};
   anchors=$$('.deck-portal').map((button,index)=>{
     const rect=button.getBoundingClientRect();return {x:rect.left+rect.width/2-origin.left,y:rect.top+rect.height/2-origin.top,index,visible:rect.bottom>mapRect.top&&rect.top<mapRect.bottom};
@@ -315,8 +316,6 @@ function cacheAnchors(){
 }
 function resize(){
   if(!active)return;
-  const visibleHeight=window.visualViewport?.height||innerHeight;
-  deck.style.setProperty('--deck-height',`${visibleHeight}px`);
   const rect=deck.getBoundingClientRect();width=Math.max(1,rect.width);height=Math.max(1,rect.height);dpr=Math.min(devicePixelRatio||1,budget.dpr);
   canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx?.setTransform(dpr,0,0,dpr,0,0);
   cacheAnchors();draw();
@@ -410,7 +409,11 @@ new MutationObserver(()=>{
   deck.style.setProperty('--deck-cyan',root.dataset.palette==='coral'?'#ffa990':root.dataset.palette==='ice'?'#83e6f0':'#71efff');
   lastFrame=0;pacer.reset();syncControls();draw();schedule();
 }).observe(root,{attributes:true,attributeFilter:['class','data-palette']});
-if('ResizeObserver'in window)new ResizeObserver(resize).observe(map);else window.addEventListener('resize',resize,{passive:true});
+if('ResizeObserver'in window){
+  const observer=new ResizeObserver(resize);
+  observer.observe(deck);
+  observer.observe(map);
+}
 window.addEventListener('resize',resize,{passive:true});window.visualViewport?.addEventListener('resize',resize,{passive:true});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){if(frame)cancelAnimationFrame(frame);frame=0;lastFrame=0;}else schedule();});
 window.addEventListener('pagehide',()=>{if(frame)cancelAnimationFrame(frame);frame=0;});

@@ -21,16 +21,17 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;450;500;550;600;650;700&family=Space+Grotesk:wght@400;500;600;700&display=optional" rel="stylesheet" media="print" onload="this.media='all'">
-  <link rel="stylesheet" href="style.css?v=20261107-flight">
-  <script src="projects.js?v=20261107-flight" defer></script>
-  <script src="catalog-data.js?v=20261107-flight" defer></script>
-  <script src="script.js?v=20261107-flight" defer></script>
-  <script type="module" src="visual-studio.mjs?v=20261107-flight"></script>
-  <script type="module" src="command-deck.mjs?v=20261107-flight"></script>
-  <link rel="stylesheet" href="command-deck.css?v=20261107-flight">
-  <link rel="stylesheet" href="experience.css?v=20261107-flight">
-  <link rel="stylesheet" href="orbit-upgrade.css?v=20261107-flight">
-  <link rel="stylesheet" href="flight-deck.css?v=20261107-flight">
+  <link rel="stylesheet" href="style.css?v=20261110-layout">
+  <script src="projects.js?v=20261110-layout" defer></script>
+  <script src="catalog-data.js?v=20261110-layout" defer></script>
+  <script src="script.js?v=20261110-layout" defer></script>
+  <script type="module" src="visual-studio.mjs?v=20261110-layout"></script>
+  <script type="module" src="command-deck.mjs?v=20261110-layout"></script>
+  <link rel="stylesheet" href="command-deck.css?v=20261110-layout">
+  <link rel="stylesheet" href="experience.css?v=20261110-layout">
+  <link rel="stylesheet" href="orbit-upgrade.css?v=20261110-layout">
+  <link rel="stylesheet" href="flight-deck.css?v=20261110-layout">
+  <link rel="stylesheet" href="deck-layout.css?v=20261110-layout">
 </head>
 <body>
   <canvas class="ambient-canvas" id="ambientCanvas" aria-hidden="true"></canvas>
@@ -98,7 +99,7 @@
         </div><div class="deck-coach" id="deckCoach"><div><strong>Pick a build to see what’s inside.</strong><p>Click a card or use the arrow keys and Enter.</p></div><button type="button" id="deckCoachHelp" data-hand-action="nav:help">Controls <span>↗</span></button><button type="button" id="deckCoachDismiss" aria-label="Dismiss the welcome tip">×</button></div><div class="deck-map-heading"><span><i></i> PROJECT MAP</span><span id="deckCatalogStatus">Saved projects available</span><span id="deckMapHint">Select a build</span></div><div class="deck-map" id="deckMap" role="group" tabindex="0" aria-label="Project constellation. Arrow keys or W A S D select a project. Enter opens it."><div class="deck-map-orbits" aria-hidden="true"><i></i><i></i><i></i></div><div id="deckPortals" class="deck-portals"></div><div class="deck-center-mark" aria-hidden="true">
           <svg viewBox="0 0 140 140"><circle cx="70" cy="70" r="48"/><circle cx="70" cy="70" r="38" stroke-dasharray="2 5"/><path d="M70 18v16m0 72v16M18 70h16m72 0h16M70 46l24 24-24 24-24-24z"/><circle class="deck-core-light" cx="70" cy="70" r="5"/></svg>
           <span>ORBIT CORE</span>
-        </div><div class="deck-ship" id="deckShip" aria-hidden="true"><svg viewBox="0 0 42 50"><path d="M21 2 36 37 21 30 6 37Z"/><path d="m15 36 6 12 6-12"/></svg><span></span></div></div><div class="deck-map-footer"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / ARROWS TO EXPLORE</span><span><kbd>ENTER</kbd> OPEN TARGET <i>·</i> <kbd>1–9</kbd> QUICK OPEN</span></div><div class="deck-input-tray" id="deckInputTray" hidden><div><strong id="deckInputMode">Mouse &amp; keyboard ready</strong><p id="deckInputMessage">Choose camera or voice whenever you like.</p></div><button id="deckStopInputs" type="button" data-hand-action="control:stop" hidden>Stop inputs <kbd>Esc</kbd></button><button id="deckDismissInput" type="button" aria-label="Dismiss input status">×</button></div></div>
+        </div><div class="deck-ship" id="deckShip" aria-hidden="true"><svg viewBox="0 0 42 50"><path d="M21 2 36 37 21 30 6 37Z"/><path d="m15 36 6 12 6-12"/></svg><span></span></div></div><div class="deck-map-footer"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / ARROWS TO EXPLORE</span><span><kbd>ENTER</kbd> OPEN TARGET <i>·</i> <kbd>1–9</kbd> QUICK OPEN</span></div></div>
         <aside class="deck-scan"><div class="deck-scan-top"><span class="deck-kicker">TARGET SCANNER</span><span class="deck-scan-light"></span></div><div id="deckPreview" class="deck-preview"></div><button id="deckOpenTarget" class="deck-primary" type="button">Open project <span>↗</span></button><div class="deck-control-tip"><span class="deck-tip-icon" aria-hidden="true">◎</span><p><b>YOUR HAND IS THE CURSOR.</b>Enable camera, point at a portal, then pinch once to open it.</p></div><button type="button" class="deck-guide-trigger" id="deckGuide">Controls &amp; voice commands <span>+</span></button><a href="#home" class="deck-classic">Classic portfolio <span>↗</span></a></aside>
       </div>
       <section id="guidedTour" class="guided-tour" aria-labelledby="tourTitle" hidden>
@@ -108,9 +109,9 @@
         <div class="tour-timeline" aria-hidden="true"><i id="tourProgress"></i></div>
         <div class="tour-controls"><div class="tour-transport"><button id="tourPrevious" type="button" data-hand-action="tour:previous" aria-label="Previous chapter">←</button><button id="tourPlay" type="button" data-hand-action="tour:toggle-play" aria-pressed="true">Pause tour</button><button id="tourNext" type="button" data-hand-action="tour:next" aria-label="Next chapter">→</button></div><p id="tourState" role="status">Autopilot</p><div class="tour-options"><label>Pace <select id="tourSpeed" aria-label="Tour pace"><option value="normal">Normal</option><option value="relaxed">Relaxed</option><option value="quick">Quick</option></select></label><label class="tour-narration"><input id="tourNarration" type="checkbox"> Narration</label></div></div>
       </section>
+      <div class="deck-input-tray" id="deckInputTray" hidden><div class="deck-camera-dock" id="deckCameraDock"></div><div class="deck-input-copy"><strong id="deckInputMode">Mouse &amp; keyboard ready</strong><p id="deckInputMessage">Choose camera or voice whenever you like.</p></div><button id="deckStopInputs" type="button" data-hand-action="control:stop" hidden>Stop inputs <kbd>Esc</kbd></button><button id="deckDismissInput" type="button" aria-label="Dismiss input status">×</button></div>
       <footer class="deck-bottom"><form id="deckCommandForm"><label for="deckCommand" class="visually-hidden">Command mission control</label><span aria-hidden="true">J /</span><input id="deckCommand" type="text" placeholder="Try “open LEXA”, “all projects”, or “help”…" aria-describedby="deckTransmission" autocomplete="off" maxlength="180" spellcheck="false"><button type="submit">EXECUTE <span>↵</span></button></form><div class="deck-transmission"><i></i><span id="deckTransmission" role="status">Browse a project, take the tour, or try “play signal run”.</span></div><div class="deck-footer-tools"><button type="button" id="deckPalette" aria-label="Change interface color">COLOR <i></i></button><button type="button" id="deckFullscreen" aria-label="Enter browser fullscreen" aria-pressed="false">⤢</button></div></footer>
       <p class="deck-privacy" id="deckPrivacy">Camera and microphone start only when enabled. Camera frames stay on your device; voice may use your browser’s speech service.</p>
-      <div class="deck-camera-dock" id="deckCameraDock"></div>
     </section>
     <section class="hero wrap" id="home" aria-labelledby="heroTitle">
       <div class="hero-copy">

@@ -1,4 +1,4 @@
-import {parseCommand,splitWakeWord,normalizeCommand} from './interaction-core.mjs?v=20261107-flight';
+import {parseCommand,splitWakeWord,normalizeCommand} from './interaction-core.mjs?v=20261110-layout';
 
 /* A short explicit wake session, never a general-purpose command executor. */
 export class JarvisSession{

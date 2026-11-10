@@ -1,4 +1,4 @@
-import { FramePacer } from './motion-core.mjs?v=20261107-flight';
+import { FramePacer } from './motion-core.mjs?v=20261110-layout';
 
 const checkpoints = [
   { x: 0.79, y: 0.29 },

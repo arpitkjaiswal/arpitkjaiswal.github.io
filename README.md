@@ -29,7 +29,7 @@ Sound always starts muted. Canvas work is suspended behind native dialogs and wh
 
 ## Edit
 
-The HTML entry points and local ES-module imports share a release query (`v=20261107-flight`). Bump it together when changing browser code so returning visitors load a consistent release from GitHub Pages.
+The HTML entry points and local ES-module imports share a release query (`v=20261110-layout`). Bump it together when changing browser code so returning visitors load a consistent release from GitHub Pages.
 
 | File | Purpose |
 | --- | --- |

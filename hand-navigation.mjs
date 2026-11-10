@@ -1,4 +1,5 @@
-import {mapHandPointer,PinchSelector} from './deck-core.mjs?v=20261107-flight';
+import {getInputScroller} from './render-runtime.mjs?v=20261110-layout';
+import {mapHandPointer,PinchSelector} from './deck-core.mjs?v=20261110-layout';
 
 /* Hand events come from the existing opt-in tracker. This controls only marked,
    visible portfolio actions. It never moves the OS cursor or synthesizes keys. */
@@ -62,7 +63,7 @@ export function startHandNavigation({onActivate,onHover=()=>{}}){
     // An open palm at the top or bottom scrolls a long dossier or a narrow map.
     if(hand.pose==='palm'&&(smooth.y<.1||smooth.y>.9)){
       scrollHold+=dt;
-      if(scrollHold>.45){const scroller=dialog||(document.documentElement.classList.contains('deck-mode')?document.querySelector('#deckMap'):document.scrollingElement);if(scroller)scroller.scrollTop+=(smooth.y>.9?1:-1)*dt*320;}
+      if(scrollHold>.45){const scroller=getInputScroller();if(scroller)scroller.scrollTop+=(smooth.y>.9?1:-1)*dt*320;}
     }else scrollHold=0;
     frame=requestAnimationFrame(tick);
   }
