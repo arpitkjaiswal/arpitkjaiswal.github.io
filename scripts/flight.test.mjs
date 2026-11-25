@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { SignalFlight } from '../signal-run.mjs';
 import { parseCommand } from '../interaction-core.mjs';
 
-const builds = ['lexa', 'terramind', 'synclee'].map(id => ({ id }));
+const builds = ['lexa', 'terramind', 'aegisvault'].map(id => ({ id }));
 
 test('flight assist recovers each signal once and can finish the whole route', () => {
   const flight = new SignalFlight(builds);

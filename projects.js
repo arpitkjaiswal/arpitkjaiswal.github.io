@@ -25,13 +25,13 @@ window.PORTFOLIO = Object.freeze({
       symbol:'✳'
     },
     {
-      id:'synclee',name:'synclEE',repo:'synclEE',categories:['web'],category:'Chrome extension',stage:'Available for download',color:'#97e8c7',art:'assets/synclee.png',
-      description:'Keep accepted coding solutions in your own GitHub repository as you solve problems.',
-      tags:['JavaScript','Chrome','GitHub OAuth'],updated:'2026-11-25T04:59:19Z',
-      detail:'Connect a repository, then submit solutions on LeetCode, CodeChef, HackerRank, or GeeksforGeeks. synclEE captures the submitted code and checks for an accepted verdict before syncing.',
-      features:['Connect to GitHub with device authorization.','Group CodeChef solutions by rating when the problem exposes one.','Track synced commits by platform in the extension popup.'],
-      boundary:'Install the unpacked extension in Chrome. Setup requires a device-flow-enabled GitHub OAuth client ID and write access to the destination repository.',
-      demo:'https://arpitkjaiswal.github.io/synclEE/',symbol:'↻'
+      id:'aegisvault',name:'AegisVault',repo:'AegisVault',categories:['systems'],category:'Encryption research',stage:'Research prototype',color:'#75dce5',art:'assets/aegisvault.svg',
+      description:'An encrypted document workspace with policy-gated reads, explicit search tradeoffs, and an authenticated audit trail.',
+      tags:['Python','PostgreSQL','SQLAlchemy'],updated:'2026-11-01T15:31:15Z',
+      detail:'A manifest-first document vault exploring application-layer encryption. It brings tenant-scoped exact search, permission checks, and transactional audit records into an inspectable SDK and HTTP API.',
+      features:['Authenticated document encryption and separate read, write, search, delete, and rotation policies.','Optimistic revisions, bounded key-rotation workflows, and tenant-scoped audit verification.','Python SDK, HTTP API, and a local operator console.'],
+      boundary:'Research prototype for synthetic data. It has not been independently audited or qualified for production security; declared search terms reveal equality relationships.',
+      symbol:'◇'
     },
     {
       id:'talentos',name:'TalentOS',repo:'Candidate-Ranking-System',categories:['ai','web'],category:'Candidate intelligence',stage:'Working prototype',color:'#ffae7b',art:'assets/talentos.svg',
