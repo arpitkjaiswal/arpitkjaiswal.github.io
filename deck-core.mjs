@@ -1,9 +1,9 @@
 /* Pure navigation logic: no sensors, DOM, network, or arbitrary command execution. */
-export const PROJECT_IDS=Object.freeze(['lexa','terramind','aegisvault','talentos','documentanalyser','orbitwarden','concord','veildb','devos']);
+export const PROJECT_IDS=Object.freeze(['lexa','terramind','synclee','talentos','documentanalyser','orbitwarden','concord','veildb','devos']);
 const ALIASES=Object.freeze({
   lexa:'lexa',buddy:'lexa','lexa buddy':'lexa','lexa and buddy':'lexa',
   terramind:'terramind','terra mind':'terramind',
-  aegisvault:'aegisvault','aegis vault':'aegisvault',
+  synclee:'synclee','sync lee':'synclee',
   talentos:'talentos','talent os':'talentos','candidate ranking system':'talentos',
   documentanalyser:'documentanalyser','document analyser':'documentanalyser','document analyzer':'documentanalyser','documentanalyzer':'documentanalyser',
   orbitwarden:'orbitwarden','orbit warden':'orbitwarden',concord:'concord',

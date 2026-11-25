@@ -12,7 +12,7 @@ test('project aliases resolve only the nine curated builds',()=>{
 test('voice can inspect, play, or open source for a named project',()=>{
   assert.deepEqual(parseCommand('Jarvis open LEXA'),{type:'openProject',id:'lexa'});
   assert.deepEqual(parseCommand('Jarvis play Orbit Warden'),{type:'launchProject',id:'orbitwarden'});
-  assert.deepEqual(parseCommand('Jarvis source for AegisVault'),{type:'sourceProject',id:'aegisvault'});
+  assert.deepEqual(parseCommand('Jarvis source for synclEE'),{type:'sourceProject',id:'synclee'});
   assert.deepEqual(parseCommand('Jarvis open project two'),{type:'openProject',id:'terramind'});
   assert.equal(parseCommand('Jarvis launch arbitrary commands'),null);
   assert.equal(projectCommand('open https://example.com'),null);

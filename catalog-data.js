@@ -3,6 +3,21 @@ window.PORTFOLIO_REPOS = {
   "checkedAt": "2026-11-06T15:37:02.246Z",
   "repos": [
     {
+      "id": 1470703995,
+      "name": "synclEE",
+      "full_name": "arpitkjaiswal/synclEE",
+      "owner": { "login": "arpitkjaiswal" },
+      "private": false,
+      "fork": false,
+      "archived": false,
+      "disabled": false,
+      "language": "JavaScript",
+      "topics": [],
+      "pushed_at": "2026-11-25T04:59:19Z",
+      "homepage": "https://arpitkjaiswal.github.io/synclEE/",
+      "html_url": "https://github.com/arpitkjaiswal/synclEE"
+    },
+    {
       "id": 1441564137,
       "name": "AegisVault",
       "full_name": "arpitkjaiswal/AegisVault",
